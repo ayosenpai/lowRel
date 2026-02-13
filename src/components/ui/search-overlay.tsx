@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { products } from '@/lib/data';
 import { getProducts } from '@/lib/actions/products';
+import { track } from '@/lib/analytics-client';
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -46,6 +47,14 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                     limit: 5
                 });
                 setResults(fetchedResults);
+
+                // Track search intent
+                if (query.trim().length > 2) {
+                    track({
+                        eventType: 'search',
+                        payload: { query: query.trim(), resultsCount: fetchedResults.length }
+                    });
+                }
             } catch (error) {
                 console.error('Search failed:', error);
             } finally {

@@ -1,6 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -50,14 +51,17 @@
     from {
       height: 0;
     }
+
     to {
       height: var(--radix-accordion-content-height);
     }
   }
+
   @keyframes accordion-up {
     from {
       height: var(--radix-accordion-content-height);
     }
+
     to {
       height: 0;
     }
@@ -65,6 +69,7 @@
 }
 
 @layer base {
+
   *,
   ::after,
   ::before,
@@ -116,7 +121,8 @@
     text-rendering: optimizeLegibility;
   }
 
-  h1, .h1 {
+  h1,
+  .h1 {
     font-family: var(--font-display);
     font-weight: 600;
     text-transform: uppercase;
@@ -124,7 +130,8 @@
     line-height: 1;
   }
 
-  h2, .h2 {
+  h2,
+  .h2 {
     font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -160,13 +167,19 @@
     }
   }
 
-  input, button, select, textarea {
+  input,
+  button,
+  select,
+  textarea {
     border-radius: 0 !important;
   }
 
   /* Prevent iPhone zoom on input focus */
   @media screen and (max-width: 768px) {
-    input, select, textarea {
+
+    input,
+    select,
+    textarea {
       font-size: 16px !important;
     }
   }
@@ -182,7 +195,7 @@
     background-color: var(--color-border);
   }
 
-  .grid-divider > * {
+  .grid-divider>* {
     background-color: var(--color-background);
   }
 }
@@ -191,7 +204,7 @@
   .text-edge-to-edge {
     letter-spacing: -0.05em;
   }
-  
+
   .transition-editorial {
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
@@ -311,9 +324,64 @@ textarea:focus-visible {
   .no-print {
     display: none !important;
   }
-  
+
   body {
     background: white !important;
     color: black !important;
   }
+}
+
+
+@layer utilities {
+  .lowrel-text {
+    display: inline-block;
+    transform: scaleX(1.2);
+    transform-origin: left;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+  }
+
+  .lowrel-header {
+    display: inline-block;
+    transform: scaleX(1.1);
+    transform-origin: center;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+  }
+
+  .lowrel-link {
+    display: inline-block;
+    transform: scaleX(1.05);
+    transform-origin: left;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+  }
+}
+
+
+/* Catamaran Font */
+@font-face {
+  font-family: 'CatamaranOmnisend';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.soundestlink.com/fonts/static/aHR0cHM6Ly9mb250cy5nc3RhdGljLmNvbS9sL2ZvbnQ_a2l0PW8tMGJJcFFveVhRYTJSeFQ3LTVCNlJ5eHMyRV82bjFpUEhqZDFhbyZza2V5PTMwOWQ5NDFhMDVmYzA3NjImdj12Mjg=) format('woff');
+}
+
+@font-face {
+  font-family: 'CatamaranOmnisend';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.soundestlink.com/fonts/static/aHR0cHM6Ly9mb250cy5nc3RhdGljLmNvbS9sL2ZvbnQ_a2l0PW8tMGJJcFFveVhRYTJSeFQ3LTVCNlJ5eHMyRV82bjFpUEpfYTFhbyZza2V5PTMwOWQ5NDFhMDVmYzA3NjImdj12Mjg=) format('woff');
 }

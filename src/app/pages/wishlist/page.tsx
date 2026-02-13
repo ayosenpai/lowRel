@@ -11,35 +11,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { login } from '@/app/login/actions';
 
-// Graphic Print Aesthetic Styles - Minimal Scale
-const graphicStyles = `
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@900&display=swap');
-
-.minga-header {
-  display: inline-block;
-  transform: scaleX(1.1);
-  transform-origin: center;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  line-height: 1.1;
-}
-
-.minga-link {
-  display: inline-block;
-  transform: scaleX(1.05);
-  transform-origin: left;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  line-height: 1.1;
-}
-`;
-
 export default function WishlistPage() {
     const { state, dispatch } = useWishlist();
     const [user, setUser] = useState<any>(null);
@@ -75,16 +46,15 @@ export default function WishlistPage() {
     if (!user) {
         return (
             <main className="min-h-screen bg-white text-black pt-[100px] font-sans">
-                <style dangerouslySetInnerHTML={{ __html: graphicStyles }} />
                 <Header variant="solid" />
                 <div className="max-w-[1440px] mx-auto px-5 lg:px-10 py-12">
                     {/* Breadcrumbs */}
                     <nav className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-400 mb-8 text-center">
-                        <span className="minga-link">Home / My Wishlist</span>
+                        <span className="lowrel-link">Home / My Wishlist</span>
                     </nav>
 
                     <div className="max-w-[380px] mx-auto text-center">
-                        <h1 className="minga-header text-2xl mb-3 uppercase">
+                        <h1 className="lowrel-header text-2xl mb-3 uppercase">
                             Wishlist
                         </h1>
                         <p className="text-[9px] font-black mb-10 uppercase tracking-widest text-gray-500">
@@ -111,14 +81,14 @@ export default function WishlistPage() {
                                     className="w-full border-[1.5px] border-black px-4 py-3 focus:outline-none placeholder:text-gray-300 font-black text-xs uppercase tracking-wider"
                                 />
                                 <div className="flex justify-end mt-2">
-                                    <button type="button" className="minga-link text-[8px] text-gray-400 hover:text-black transition-colors uppercase font-black">
+                                    <button type="button" className="lowrel-link text-[8px] text-gray-400 hover:text-black transition-colors uppercase font-black">
                                         Forgot password?
                                     </button>
                                 </div>
                             </div>
 
                             {loginState?.error && (
-                                <p className="minga-link text-red-500 text-[10px] uppercase font-black text-center">{loginState.error}</p>
+                                <p className="lowrel-link text-red-500 text-[10px] uppercase font-black text-center">{loginState.error}</p>
                             )}
 
                             <button
@@ -126,7 +96,7 @@ export default function WishlistPage() {
                                 disabled={isPending}
                                 className="w-full bg-black text-white py-3.5 text-xs hover:bg-gray-900 transition-colors disabled:opacity-50 mt-2"
                             >
-                                <span className="minga-header tracking-[0.2em]">
+                                <span className="lowrel-header tracking-[0.2em]">
                                     {isPending ? 'SIGNING IN...' : 'SIGN IN'}
                                 </span>
                             </button>
@@ -135,7 +105,7 @@ export default function WishlistPage() {
                         <div className="mt-8">
                             <Link
                                 href="/login"
-                                className="minga-link text-[10px] hover:text-gray-600 transition-colors uppercase underline underline-offset-4 decoration-1 font-black"
+                                className="lowrel-link text-[10px] hover:text-gray-600 transition-colors uppercase underline underline-offset-4 decoration-1 font-black"
                             >
                                 Create account
                             </Link>
@@ -149,12 +119,11 @@ export default function WishlistPage() {
 
     return (
         <main className="min-h-screen bg-white text-black pt-[100px] font-sans">
-            <style dangerouslySetInnerHTML={{ __html: graphicStyles }} />
             <Header variant="solid" />
 
             <div className="max-w-[1440px] mx-auto px-5 lg:px-10 py-12">
                 <div className="text-center mb-10">
-                    <h1 className="minga-header text-2xl uppercase">
+                    <h1 className="lowrel-header text-2xl uppercase">
                         Your Wishlist ({state.items.length})
                     </h1>
                 </div>

@@ -161,8 +161,8 @@ export default function ContactPage() {
 
               <div className="space-y-6 md:space-y-8">
                 {[
-                  { icon: <Phone size={22} />, label: 'Phone', val: '1-800-MINGA', sub: 'Mon-Fri 9am-6pm EST' },
-                  { icon: <Mail size={22} />, label: 'Email', val: 'support@minga.io', sub: '24/7 Response time' },
+                  { icon: <Phone size={22} />, label: 'Phone', val: '1-800-LOWREL', sub: 'Mon-Fri 9am-6pm EST' },
+                  { icon: <Mail size={22} />, label: 'Email', val: 'support@lowreligion.com', sub: '24/7 Response time' },
                   { icon: <MapPin size={22} />, label: 'Location', val: 'New York, NY', sub: 'Corporate Headquarters' }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4 md:gap-6 items-start">

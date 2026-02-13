@@ -88,7 +88,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <aside className={`fixed md:sticky top-0 h-screen bg-[#0F172A] text-white transition-all duration-300 z-[100] ${isMobile ? (isSidebarOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full') : (isSidebarOpen ? 'w-72 translate-x-0' : 'w-24 translate-x-0')} flex flex-col border-r border-[#1E293B]`}>
                 <div className="h-20 flex items-center justify-between px-8 border-b border-[#1E293B]">
                     <span className="text-xl font-black uppercase tracking-[0.2em] text-[#d8a4bc]">
-                        {isSidebarOpen ? 'Minga Admin' : 'M'}
+                        {isSidebarOpen ? 'Low Religion Admin' : 'LR'}
                     </span>
                     {isMobile && (
                         <button
@@ -159,10 +159,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         <div className="flex items-center gap-3 md:gap-4">
                             <div className="text-right hidden sm:block">
                                 <p className="text-[10px] font-black uppercase tracking-[0.1em] text-[#0F172A] m-0">{user?.email?.split('@')[0] || 'Admin'}</p>
-                                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5">Minga Manager</p>
+                                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5">Store Manager</p>
                             </div>
                             <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#0F172A] border-2 border-[#E2E8F0] shadow-sm flex items-center justify-center text-[#d8a4bc] font-black text-sm uppercase">
-                                {user?.email?.[0] || 'M'}
+                                {user?.email?.[0] || 'LR'}
                             </div>
                         </div>
                     </div>

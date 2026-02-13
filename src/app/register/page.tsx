@@ -6,51 +6,21 @@ import Link from 'next/link'
 import Header from '@/components/sections/header'
 import Footer from '@/components/sections/footer'
 
-// Graphic Print Aesthetic Styles - Minimal Scale
-const graphicStyles = `
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@900&display=swap');
-
-.minga-header {
-  display: inline-block;
-  transform: scaleX(1.1);
-  transform-origin: center;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  line-height: 1.1;
-}
-
-.minga-link {
-  display: inline-block;
-  transform: scaleX(1.05);
-  transform-origin: left;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  line-height: 1.1;
-}
-`;
-
 export default function RegisterPage() {
     const [state, formAction, isPending] = useActionState(signup, { error: undefined, success: false } as any)
 
     return (
         <main className="min-h-screen bg-white text-black pt-[100px] font-sans">
-            <style dangerouslySetInnerHTML={{ __html: graphicStyles }} />
             <Header variant="solid" />
 
             <div className="max-w-[1440px] mx-auto px-5 lg:px-10 py-12">
                 {/* Breadcrumbs */}
                 <nav className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-400 mb-8 text-center">
-                    <span className="minga-link">Home / Create Account</span>
+                    <span className="lowrel-link">Home / Create Account</span>
                 </nav>
 
                 <div className="max-w-[380px] mx-auto text-center">
-                    <h1 className="minga-header text-2xl mb-8 uppercase">
+                    <h1 className="lowrel-header text-2xl mb-8 uppercase">
                         Create Account
                     </h1>
 
@@ -102,11 +72,11 @@ export default function RegisterPage() {
                         </div>
 
                         {state?.error && (
-                            <p className="minga-link text-red-500 text-[10px] uppercase font-black text-center">{state.error}</p>
+                            <p className="lowrel-link text-red-500 text-[10px] uppercase font-black text-center">{state.error}</p>
                         )}
 
                         {state?.success && (
-                            <p className="minga-link text-green-500 text-[10px] uppercase font-black text-center">Check your email for a confirmation link.</p>
+                            <p className="lowrel-link text-green-500 text-[10px] uppercase font-black text-center">Check your email for a confirmation link.</p>
                         )}
 
                         <button
@@ -114,7 +84,7 @@ export default function RegisterPage() {
                             disabled={isPending}
                             className="w-full bg-black text-white py-3.5 text-xs hover:bg-gray-900 transition-colors disabled:opacity-50 mt-4"
                         >
-                            <span className="minga-header tracking-[0.2em]">
+                            <span className="lowrel-header tracking-[0.2em]">
                                 {isPending ? 'PROCESSING...' : 'CREATE'}
                             </span>
                         </button>
@@ -123,7 +93,7 @@ export default function RegisterPage() {
                     <div className="mt-8">
                         <Link
                             href="/login"
-                            className="minga-link text-[10px] hover:text-gray-600 transition-colors uppercase underline underline-offset-4 decoration-1 font-black"
+                            className="lowrel-link text-[10px] hover:text-gray-600 transition-colors uppercase underline underline-offset-4 decoration-1 font-black"
                         >
                             Already have an account? Sign In
                         </Link>

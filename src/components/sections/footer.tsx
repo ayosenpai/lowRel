@@ -4,77 +4,8 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Instagram, Youtube, ChevronDown, ChevronUp, Mail, Smartphone } from 'lucide-react';
 
-// Add Google Fonts for Archivo with Graphic Print enhancements
-const archivoStyle = `
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@900&display=swap');
-
-/* Graphic Print Rendering Strategy */
-.minga-text {
-  display: inline-block;
-  transform: scaleX(1.2);
-  transform-origin: left;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-}
-
-.minga-header {
-  display: inline-block;
-  transform: scaleX(1.2);
-  transform-origin: left;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  line-height: 1.1;
-}
-
-.minga-link {
-  display: inline-block;
-  transform: scaleX(1.2);
-  transform-origin: left;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  line-height: 1.1;
-}
-`;
-
-if (typeof window !== 'undefined') {
-  const archivoStyleSheet = document.createElement('style');
-  archivoStyleSheet.textContent = archivoStyle;
-  document.head.appendChild(archivoStyleSheet);
-}
-
-// Minga London Catamaran Font
-const catamaranStyle = `
-@font-face {
-  font-family: 'CatamaranOmnisend';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(https://fonts.soundestlink.com/fonts/static/aHR0cHM6Ly9mb250cy5nc3RhdGljLmNvbS9sL2ZvbnQ_a2l0PW8tMGJJcFFveVhRYTJSeFQ3LTVCNlJ5eHMyRV82bjFpUEhqZDFhbyZza2V5PTMwOWQ5NDFhMDVmYzA3NjImdj12Mjg=) format('woff');
-}
-@font-face {
-  font-family: 'CatamaranOmnisend';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url(https://fonts.soundestlink.com/fonts/static/aHR0cHM6Ly9mb250cy5nc3RhdGljLmNvbS9sL2ZvbnQ_a2l0PW8tMGJJcFFveVhRYTJSeFQ3LTVCNlJ5eHMyRV82bjFpUEpfYTFhbyZza2V5PTMwOWQ5NDFhMDVmYzA3NjImdj12Mjg=) format('woff');
-}
-`;
-
-if (typeof window !== 'undefined') {
-  const catamaranStyleSheet = document.createElement('style');
-  catamaranStyleSheet.textContent = catamaranStyle;
-  document.head.appendChild(catamaranStyleSheet);
-}
-
 const Footer = () => {
+
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
   const toggleSection = (title: string) => {
@@ -113,7 +44,7 @@ const Footer = () => {
         {/* Newsletter Section - Always visible */}
         <div className="mb-8 md:mb-12">
           <div className="text-center mb-6 md:mb-8">
-            <h2 className="minga-header text-[10px] font-black mb-4 uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>THE GOOD STUFF, STRAIGHT TO U</h2>
+            <h2 className="lowrel-header text-[10px] font-black mb-4 uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>O' LORD, THY FASHION GOT ME</h2>
             <p className="text-[12px] mb-4 md:mb-6 text-gray-400">Get 15% off your first order + early access to new drops and restocks.</p>
           </div>
           <div className="max-w-xs md:max-w-sm mx-auto">
@@ -146,7 +77,7 @@ const Footer = () => {
                     onClick={() => toggleSection(title)}
                     className="w-full py-0.1 flex justify-between items-center text-left hover:text-white transition-colors"
                   >
-                    <span className="minga-header text-[10px] font-black uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>{title}</span>
+                    <span className="lowrel-header text-[10px] font-black uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>{title}</span>
                     <span className="text-[14px] text-white-400">{isExpanded ? '−' : '+'}</span>
                   </button>
                   <div className={`overflow-hidden transition-all duration-300 ease-out ${isExpanded ? 'max-h-60' : 'max-h-0'}`}>
@@ -156,7 +87,7 @@ const Footer = () => {
                           <li key={link.label}>
                             <a
                               href={link.href}
-                              className="minga-link text-[10px] font-black uppercase text-gray-400 hover:text-white transition-colors" style={{ padding: "4px 0px" }}
+                              className="lowrel-link text-[10px] font-black uppercase text-gray-400 hover:text-white transition-colors" style={{ padding: "4px 0px" }}
                             >
                               {link.label}
                             </a>
@@ -174,7 +105,7 @@ const Footer = () => {
           <div className="hidden md:grid md:grid-cols-4 gap-y-4">
             {Object.entries(footerLinks).map(([title, links]) => (
               <div key={title} className="flex flex-col space-y-2">
-                <h3 className="minga-header text-[10px] font-black uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>
+                <h3 className="lowrel-header text-[10px] font-black uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>
                   {title}
                 </h3>
                 <ul className="flex flex-col" style={{ lineHeight: '1.1' }}>
@@ -182,7 +113,7 @@ const Footer = () => {
                     <li key={link.label}>
                       <a
                         href={link.href}
-                        className="minga-link text-[10px] font-black text-gray-400 hover:text-white transition-colors" style={{ padding: "4px 0px" }}
+                        className="lowrel-link text-[10px] font-black text-gray-400 hover:text-white transition-colors" style={{ padding: "4px 0px" }}
                       >
                         {link.label}
                       </a>
@@ -193,6 +124,7 @@ const Footer = () => {
             ))}
           </div>
         </div>
+
 
         {/* Social Icons & App Downloads */}
         <div className="mb-8 md:mb-12 flex flex-col items-center">
@@ -216,15 +148,6 @@ const Footer = () => {
             </a>
           </div>
 
-          {/* App Store Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <a href="#" className="h-10 transition-opacity hover:opacity-80">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="Download on the App Store" className="h-full" />
-            </a>
-            <a href="#" className="h-10 transition-opacity hover:opacity-80">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="h-full" />
-            </a>
-          </div>
         </div>
 
         {/* Bottom Legal Bar */}
@@ -239,7 +162,7 @@ const Footer = () => {
               </a>
             </div>
             <div className="text-[8px] md:text-[9px] tracking-[0.05em] uppercase font-normal text-gray-500">
-              COPYRIGHT © 2026 MINGA LONDON US
+              COPYRIGHT © 2026 LOW RELIGION
             </div>
           </div>
         </div>

@@ -34,22 +34,22 @@ export default async function AdminDashboardPage() {
             bg: 'bg-blue-50'
         },
         {
-            name: 'Checkouts',
-            value: stats.checkoutStarts,
-            icon: ShoppingCart,
-            change: '+5.2%',
-            trend: 'up',
-            color: 'text-orange-600',
-            bg: 'bg-orange-50'
-        },
-        {
-            name: 'Customers',
-            value: stats.cartAdds,
+            name: 'Total Visitors',
+            value: stats.visitors,
             icon: Users,
             change: '+18%',
             trend: 'up',
             color: 'text-green-600',
             bg: 'bg-green-50'
+        },
+        {
+            name: 'Active Interest',
+            value: stats.cartAdds,
+            icon: ShoppingCart,
+            change: '+12%',
+            trend: 'up',
+            color: 'text-purple-600',
+            bg: 'bg-purple-50'
         },
         {
             name: 'Conversion',

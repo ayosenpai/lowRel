@@ -6,7 +6,7 @@ import { eq, and, isNotNull } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 
-const SESSION_COOKIE_NAME = 'minga_session_id';
+const SESSION_COOKIE_NAME = 'lowrel_session_id';
 
 export async function getSessionId() {
     const cookieStore = await cookies();

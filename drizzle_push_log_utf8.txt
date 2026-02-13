@@ -1,0 +1,36 @@
+﻿No config path provided, using default 'drizzle.config.ts'
+Reading config file 'C:\Users\Shoayb\Desktop\MINGA\meeeen\d_lowRel-main\d_lowRel-core\d_lowRel-main\drizzle.config.ts'
+[dotenv@17.2.3] injecting env (5) from .env.local -- tip: ≡ƒùé∩╕Å backup and recover secrets: https://dotenvx.com/ops
+Using 'postgres' driver for database querying
+[Γú╖] Pulling schema from database...
+[2K[1G[Γú»] Pulling schema from database...
+[2K[1G[Γúƒ] Pulling schema from database...
+[2K[1G[Γí┐] Pulling schema from database...
+[2K[1G[Γó┐] Pulling schema from database...
+[2K[1G[Γú╗] Pulling schema from database...
+[2K[1G[Γú╜] Pulling schema from database...
+[2K[1G[Γú╖] Pulling schema from database...
+node.exe : C:\Users\Shoayb\Desktop\MINGA\meeeen\d_lowRel-
+main\d_lowRel-core\d_lowRel-main\node_modules\drizzle-kit
+\bin.cjs:19578
+At C:\Program Files\nodejs\npx.ps1:29 char:3
++   & $NODE_EXE $NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\Sh 
+   oayb...t\bin.cjs:19578:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+              checkValue = 
+checkValue.replace(/^CHECK\s*\(\(/, 
+"").replace(/\)\)\s*$/, "");
+                                      ^
+
+TypeError: Cannot read properties of undefined (reading 
+'replace')
+    at C:\Users\Shoayb\Desktop\MINGA\meeeen\d_lowRel-main
+\d_lowRel-core\d_lowRel-main\node_modules\drizzle-kit\bin
+.cjs:19578:39
+    at process.processTicksAndRejections 
+(node:internal/process/task_queues:105:5)
+
+Node.js v22.13.0

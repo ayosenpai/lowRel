@@ -36,12 +36,13 @@ export default function ProductActions({ id, handle }: { id: string, handle: str
             >
                 <ExternalLink className="w-4 h-4" />
             </Link>
-            <button
+            <Link
+                href={`/admin/products/${id}`}
                 className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-black hover:border-gray-300 hover:shadow-sm transition-all shadow-sm"
                 title="Edit"
             >
                 <Edit className="w-4 h-4" />
-            </button>
+            </Link>
             <button
                 onClick={handleDelete}
                 disabled={isDeleting}

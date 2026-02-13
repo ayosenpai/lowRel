@@ -37,15 +37,16 @@ const CategoryGrid = () => {
             initial={{ opacity: 0, scale: 1.05 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: index * 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.3, delay: index * 0.1, ease: "easeOut" }}
             className="relative group overflow-hidden bg-black"
           >
-            <a href={category.href} className="block relative aspect-[1/1] md:aspect-[4/5]">
+            <a href={category.href} className="block relative aspect-[0.7/1] md:aspect-[4/5]">
               <Image
                 src={category.image}
                 alt={category.title}
                 fill
-                priority={index < 4}
+                loading="lazy"
+
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, 50vw"
               />

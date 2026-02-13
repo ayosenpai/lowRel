@@ -10,35 +10,6 @@ import { products } from '@/lib/data';
 import { trackEvent } from '@/lib/actions/analytics';
 import confetti from 'canvas-confetti';
 
-// Graphic Print Aesthetic Styles - Minimal Scale
-const graphicStyles = `
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@900&display=swap');
-
-.minga-header {
-  display: inline-block;
-  transform: scaleX(1.1);
-  transform-origin: center;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  line-height: 1.1;
-}
-
-.minga-link {
-  display: inline-block;
-  transform: scaleX(1.05);
-  transform-origin: left;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  line-height: 1.1;
-}
-`;
-
 export default function CartSidebar() {
   const { state, dispatch } = useCart();
   const [addingId, setAddingId] = useState<string | null>(null);
@@ -129,7 +100,6 @@ export default function CartSidebar() {
     <AnimatePresence>
       {state.isOpen && (
         <>
-          <style dangerouslySetInnerHTML={{ __html: graphicStyles }} />
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -149,7 +119,7 @@ export default function CartSidebar() {
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b-[1.5px] border-black">
-              <h2 className="minga-header text-xl uppercase">Shopping Bag</h2>
+              <h2 className="lowrel-header text-xl uppercase">Shopping Bag</h2>
               <button
                 onClick={() => dispatch({ type: 'TOGGLE_CART' })}
                 className="p-1 hover:rotate-90 transition-transform duration-300"
@@ -163,7 +133,7 @@ export default function CartSidebar() {
               {state.items.length === 0 ? (
                 // Empty State
                 <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-                  <h3 className="minga-header text-lg mb-4 uppercase">Your Bag is Empty</h3>
+                  <h3 className="lowrel-header text-lg mb-4 uppercase">Your Bag is Empty</h3>
                   <Link
                     href="/collections/all"
                     onClick={() => dispatch({ type: 'TOGGLE_CART' })}
@@ -239,7 +209,7 @@ export default function CartSidebar() {
 
               {/* Recommendations Section */}
               <div className="border-t-[1.5px] border-gray-100 mt-4 p-6 bg-gray-50/50">
-                <h3 className="minga-link text-[11px] uppercase tracking-widest mb-8 text-black">Complete The Fit</h3>
+                <h3 className="lowrel-link text-[11px] uppercase tracking-widest mb-8 text-black">Complete The Fit</h3>
                 <div className="grid grid-cols-3 gap-3">
                   {recommendations.map((product) => (
                     <div key={product.id} className="group relative">
@@ -282,21 +252,22 @@ export default function CartSidebar() {
             {state.items.length > 0 && (
               <div className="border-t-[1.5px] border-black p-6 bg-white safe-bottom">
                 <div className="flex justify-between items-center mb-6 px-1">
-                  <span className="minga-header text-sm uppercase tracking-widest">Subtotal</span>
-                  <span className="minga-header text-sm uppercase tracking-widest">{state.items[0]?.symbol || '$'} {state.total.toFixed(2)}</span>
+                  <span className="lowrel-header text-sm uppercase tracking-widest">Subtotal</span>
+                  <span className="lowrel-header text-sm uppercase tracking-widest">{state.items[0]?.symbol || '$'} {state.total.toFixed(2)}</span>
                 </div>
                 <Link
                   href="/checkout"
                   onClick={handleBeginCheckout}
                   className="block w-full bg-black text-white text-center py-4 uppercase font-black tracking-[0.2em] text-sm hover:bg-gray-900 transition-colors"
                 >
-                  <span className="minga-header">Checkout</span>
+                  <span className="lowrel-header">Checkout</span>
                 </Link>
                 <div className="mt-6 text-center">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black">No Duties for US Orders</p>
                 </div>
               </div>
             )}
+
           </motion.div>
         </>
       )}

@@ -48,6 +48,7 @@ export const customers = pgTable('customers', {
     phone: text('phone'),
     firstName: text('first_name'),
     lastName: text('last_name'),
+    madid: text('madid'), // Mobile Advertiser ID (IDFA/AAID)
     totalSpend: integer('total_spend').default(0), // stored in cents (base currency USD for normalization or tracking)
     ordersCount: integer('orders_count').default(0),
     lastSeenAt: timestamp('last_seen_at').defaultNow(),
@@ -94,6 +95,23 @@ export const orderItems = pgTable('order_items', {
     };
 });
 
+export const reviews = pgTable('reviews', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    productId: text('product_id').references(() => products.id).notNull(),
+    profileId: uuid('profile_id').references(() => profiles.id).notNull(),
+    rating: integer('rating').notNull(),
+    title: text('title'),
+    content: text('content').notNull(),
+    isVerified: boolean('is_verified').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        reviewProductIdx: index('review_product_idx').on(table.productId),
+        reviewProfileIdx: index('review_profile_idx').on(table.profileId),
+    };
+});
+
 export const userEvents = pgTable('user_events', {
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id'), // From Supabase Auth (if applicable)
@@ -115,6 +133,21 @@ export const userEvents = pgTable('user_events', {
 export const customersRelations = relations(customers, ({ many }) => ({
     orders: many(orders),
     events: many(userEvents),
+}));
+
+export const productsRelations = relations(products, ({ many }) => ({
+    reviews: many(reviews),
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+    product: one(products, {
+        fields: [reviews.productId],
+        references: [products.id],
+    }),
+    profile: one(profiles, {
+        fields: [reviews.profileId],
+        references: [profiles.id],
+    }),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({

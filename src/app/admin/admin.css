@@ -1,14 +1,13 @@
-
 /* Shared design tokens for the premium Admin experience */
 :root {
-  --admin-primary: #5750F1;
-  --admin-stroke: #E6EBF1;
-  --admin-white: #FFFFFF;
-  --admin-bg-gray: #F9FAFB;
-  --admin-text-dark: #111928;
-  --admin-text-body: #64748B;
-  --admin-shadow-sm: 0px 1px 2px 0px rgba(0, 0, 0, 0.08);
-  --admin-shadow-default: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --admin-primary: #5750F1;
+    --admin-stroke: #E6EBF1;
+    --admin-white: #FFFFFF;
+    --admin-bg-gray: #F9FAFB;
+    --admin-text-dark: #111928;
+    --admin-text-body: #64748B;
+    --admin-shadow-sm: 0px 1px 2px 0px rgba(0, 0, 0, 0.08);
+    --admin-shadow-default: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 .admin-glass {
@@ -33,22 +32,42 @@
 .admin-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
+
 .admin-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .admin-scrollbar::-webkit-scrollbar-thumb {
     background: var(--admin-stroke);
     border-radius: 10px;
 }
+
 .admin-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--admin-primary);
 }
 
 /* Typography styles from NextAdmin */
-.text-heading-6 { font-size: 24px; line-height: 30px; font-weight: 700; }
-.text-body-sm { font-size: 14px; line-height: 22px; }
-.text-body-xs { font-size: 12px; line-height: 20px; }
+.text-heading-6 {
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 700;
+}
+
+.text-body-sm {
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.text-body-xs {
+    font-size: 12px;
+    line-height: 20px;
+}
 
 /* Dashboard spacing utilities */
-.p-7\.5 { padding: 1.875rem; }
-.gap-7\.5 { gap: 1.875rem; }
+.p-7\.5 {
+    padding: 1.875rem;
+}
+
+.gap-7\.5 {
+    gap: 1.875rem;
+}

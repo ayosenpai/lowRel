@@ -43,7 +43,7 @@ const MovingCarousel = ({ products: initialProducts = [] }: { products?: any[] }
               <Link
                 href={`/products/${product.handle}`}
                 key={`${product.id}-${index}`}
-                className="flex-shrink-0 w-[200px] md:w-[280px] group"
+                className="flex-shrink-0 w-[200px] md:w-[20px] group"
               >
                 <div className="relative aspect-[3/4] overflow-hidden bg-[#111111]">
                   <Image
@@ -52,8 +52,10 @@ const MovingCarousel = ({ products: initialProducts = [] }: { products?: any[] }
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 200px, 280px"
+                    loading="lazy"
                   />
                 </div>
+
                 <div className="mt-3">
                   <p className="text-black text-[11px] uppercase font-bold tracking-wider truncate">
                     {product.name}

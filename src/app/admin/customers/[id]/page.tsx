@@ -9,10 +9,11 @@ import Link from 'next/link';
 export default async function CustomerProfilePage({
     params,
 }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
+    const { id } = await params;
     const customer = await db.query.customers.findFirst({
-        where: eq(customers.id, params.id),
+        where: eq(customers.id, id),
     });
 
     if (!customer) {
@@ -21,8 +22,8 @@ export default async function CustomerProfilePage({
 
     // Parallel Fetching
     const [customerOrders, events] = await Promise.all([
-        db.select().from(orders).where(eq(orders.customerId, params.id)).orderBy(desc(orders.createdAt)),
-        db.select().from(userEvents).where(eq(userEvents.customerId, params.id)).orderBy(desc(userEvents.timestamp)).limit(50),
+        db.select().from(orders).where(eq(orders.customerId, id)).orderBy(desc(orders.createdAt)),
+        db.select().from(userEvents).where(eq(userEvents.customerId, id)).orderBy(desc(userEvents.timestamp)).limit(50),
     ]);
 
     return (

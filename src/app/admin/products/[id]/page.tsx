@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { addProduct } from '@/lib/actions/admin';
+import { getProductById, updateProduct } from '@/lib/actions/admin';
 import {
     ArrowLeft,
     Save,
@@ -13,12 +13,17 @@ import {
     IndianRupee,
     Type,
     Layers,
-    Scissors
+    Scissors,
+    Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function NewProductPage() {
+import { use } from 'react';
+
+export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -33,9 +38,40 @@ export default function NewProductPage() {
         modelInfo: '',
         images: '',
         details: '',
-        isNew: true,
+        isNew: false,
         isSale: false
     });
+
+    useEffect(() => {
+        async function fetchProduct() {
+            const product = await getProductById(id);
+            if (!product) {
+                alert('Product not found');
+                router.push('/admin/products');
+                return;
+            }
+
+            setFormData({
+                name: product.name,
+                handle: product.handle,
+                priceUSD: (product.priceUSD / 100).toString(),
+                priceINR: (product.priceINR / 100).toString(),
+                compareAtPriceUSD: product.compareAtPriceUSD ? (product.compareAtPriceUSD / 100).toString() : '',
+                compareAtPriceINR: product.compareAtPriceINR ? (product.compareAtPriceINR / 100).toString() : '',
+                category: product.category || 'T-Shirts',
+                fit: product.fit || 'Regular',
+                description: product.description || '',
+                modelInfo: product.modelInfo || '',
+                images: product.images?.join('\n') || '',
+                details: product.details?.join('\n') || '',
+                isNew: product.isNew || false,
+                isSale: product.isSale || false
+            });
+            setIsLoading(false);
+        }
+
+        fetchProduct();
+    }, [id, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,11 +88,11 @@ export default function NewProductPage() {
                 details: formData.details.split('\n').filter(detail => detail.trim() !== '')
             };
 
-            await addProduct(productData);
+            await updateProduct(id, productData);
             router.push('/admin/products');
             router.refresh();
         } catch (error) {
-            alert('Failed to create product. Please check console.');
+            alert('Failed to update product');
             console.error(error);
         } finally {
             setIsSubmitting(false);
@@ -69,23 +105,18 @@ export default function NewProductPage() {
             const checked = (e.target as HTMLInputElement).checked;
             setFormData(prev => ({ ...prev, [name]: checked }));
         } else {
-            setFormData(prev => {
-                const newData = { ...prev, [name]: value };
-
-                // Smart Pricing: Auto-convert USD to INR if INR is empty
-                if (name === 'priceUSD' && value && !prev.priceINR) {
-                    newData.priceINR = (parseFloat(value) * 84).toFixed(0);
-                }
-
-                // Auto-generate handle from name
-                if (name === 'name' && value && !prev.handle) {
-                    newData.handle = value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '');
-                }
-
-                return newData;
-            });
+            setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-[#d8a4bc]" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Synchronizing with Registry...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-5xl mx-auto space-y-12 pb-20">
@@ -96,8 +127,8 @@ export default function NewProductPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-black uppercase tracking-tight text-[#0F172A]">Initialize Asset</h1>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">Catalog Expansion & Market Valuation</p>
+                        <h1 className="text-2xl font-black uppercase tracking-tight text-[#0F172A]">Modify Manifest</h1>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">Editing HL_{formData.handle.toUpperCase()}</p>
                     </div>
                 </div>
                 <div className="flex gap-4">
@@ -105,7 +136,7 @@ export default function NewProductPage() {
                         href="/admin/products"
                         className="px-8 py-3.5 bg-white border border-gray-200 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all rounded-xl shadow-sm"
                     >
-                        Void Action
+                        Discard Changes
                     </Link>
                     <button
                         onClick={handleSubmit}
@@ -113,7 +144,7 @@ export default function NewProductPage() {
                         className="flex items-center gap-3 px-10 py-3.5 bg-[#0F172A] text-[#d8a4bc] text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all rounded-xl shadow-lg disabled:opacity-50 group"
                     >
                         <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        {isSubmitting ? 'Protocol Executing...' : 'Commit to Catalog'}
+                        {isSubmitting ? 'Updating Core...' : 'Sync Changes'}
                     </button>
                 </div>
             </div>
@@ -136,7 +167,6 @@ export default function NewProductPage() {
                                         onChange={handleChange}
                                         required
                                         className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold uppercase tracking-wider focus:border-[#d8a4bc] focus:bg-white transition-all outline-none"
-                                        placeholder="GRAPHIC T-SHIRT 001"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -147,7 +177,6 @@ export default function NewProductPage() {
                                         onChange={handleChange}
                                         required
                                         className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold uppercase tracking-wider focus:border-[#d8a4bc] focus:bg-white transition-all outline-none"
-                                        placeholder="graphic-t-shirt-1"
                                     />
                                 </div>
                             </div>
@@ -159,7 +188,6 @@ export default function NewProductPage() {
                                     onChange={handleChange}
                                     rows={5}
                                     className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold uppercase tracking-wider focus:border-[#d8a4bc] focus:bg-white transition-all outline-none resize-none leading-relaxed"
-                                    placeholder="Define the brand story and technical specifications..."
                                 />
                             </div>
                         </div>
@@ -179,12 +207,7 @@ export default function NewProductPage() {
                                 required
                                 rows={6}
                                 className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-[11px] font-mono tracking-tighter focus:border-[#d8a4bc] focus:bg-white transition-all outline-none resize-none"
-                                placeholder="https://cdn.lowreligion.com/assets/p1-main.jpg"
                             />
-                            <div className="flex items-center gap-2 mt-4 p-4 bg-gray-50 rounded-xl">
-                                <Info className="w-4 h-4 text-gray-300" />
-                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-loose">Automated image parser will identify primary and auxiliary assets for gallery rendering.</p>
-                            </div>
                         </div>
                     </div>
 
@@ -215,7 +238,6 @@ export default function NewProductPage() {
                                     value={formData.modelInfo}
                                     onChange={handleChange}
                                     className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold uppercase tracking-wider focus:border-[#d8a4bc] focus:bg-white transition-all outline-none"
-                                    placeholder="E.G. 188CM WEARING SIZE LARGE"
                                 />
                             </div>
                         </div>
@@ -227,7 +249,6 @@ export default function NewProductPage() {
                                 onChange={handleChange}
                                 rows={4}
                                 className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold uppercase tracking-wider focus:border-[#d8a4bc] focus:bg-white transition-all outline-none resize-none leading-relaxed"
-                                placeholder="100% HEAVYWEIGHT COTTON\nPRE-SHRUNK FABRIC\nMADE IN INDIA"
                             />
                         </div>
                     </div>
@@ -253,7 +274,6 @@ export default function NewProductPage() {
                                     onChange={handleChange}
                                     required
                                     className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-lg font-black tracking-tighter focus:border-[#d8a4bc] focus:bg-white transition-all outline-none"
-                                    placeholder="45.00"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -267,9 +287,7 @@ export default function NewProductPage() {
                                     onChange={handleChange}
                                     required
                                     className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-xl text-lg font-black tracking-tighter focus:border-[#d8a4bc] focus:bg-white transition-all outline-none"
-                                    placeholder="3500"
                                 />
-                                <p className="text-[8px] text-gray-400 font-bold uppercase mt-2 ml-1 opacity-60 italic">Suggested rate applied (1 USD ≈ 84 INR)</p>
                             </div>
                         </div>
 
