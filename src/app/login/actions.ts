@@ -60,10 +60,13 @@ export async function logout() {
 export async function signInWithGoogle() {
     const supabase = await createClient()
 
+    // Get the origin dynamically (works for both localhost and production)
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+            redirectTo: `${origin}/auth/callback`,
         },
     })
 

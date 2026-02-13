@@ -18,10 +18,10 @@ const Footer = () => {
 
   const footerLinks = {
     'MY ACCOUNT': [
-      { label: 'TRACK MY ORDER', href: '#' },
-      { label: 'ORDER HISTORY', href: '#' },
-      { label: 'START A RETURN', href: '#' },
-      { label: 'WISHLIST', href: '#' },
+      { label: 'TRACK MY ORDER', href: '/account' },
+      { label: 'ORDER HISTORY', href: '/account' },
+      { label: 'START A RETURN', href: '/help/returns' },
+      { label: 'WISHLIST', href: '/pages/wishlist' },
     ],
     'HELP': [
       { label: 'FAQS', href: '/help/faqs' },

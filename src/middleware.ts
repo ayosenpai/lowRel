@@ -2,11 +2,23 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-    let response = await updateSession(request)
+    // Get the Supabase session update response
+    const supabaseResponse = await updateSession(request)
 
-    // Create a new response if updateSession returned something else or if we need to set headers
-    if (!response) {
-        response = NextResponse.next()
+    // Create response based on what updateSession returned
+    const response = supabaseResponse || NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    })
+
+    // IMPORTANT: Copy over all Supabase cookies to preserve authentication
+    if (supabaseResponse) {
+        supabaseResponse.cookies.getAll().forEach((cookie) => {
+            response.cookies.set(cookie.name, cookie.value, {
+                ...cookie,
+            })
+        })
     }
 
     // Region detection logic
