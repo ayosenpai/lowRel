@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HelpPagination from '@/components/ui/help-pagination';
+import { Search, Plus, Minus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import BackButton from '@/components/ui/back-button';
-import { Search, Plus, Minus, MessageCircle } from 'lucide-react';
 
 export default function FAQsPage() {
   const [openItems, setOpenItems] = useState<number[]>([]);
@@ -12,32 +12,28 @@ export default function FAQsPage() {
 
   const faqs = [
     {
-      category: "Market & Orders",
+      category: "Operations",
       items: [
         {
-          question: "What payment methods do you accept?",
-          answer: "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, and Google Pay."
+          question: "Payment Methods?",
+          answer: "Major credit cards, PayPal, Apple Pay, and Google Pay accepted."
         },
         {
-          question: "Can I modify my order after placement?",
-          answer: "Orders can be modified within 2 hours of placement. Please contact our support team immediately for assistance."
-        },
-        {
-          question: "Do you offer gift wrapping?",
-          answer: "Yes, we offer complimentary luxury gift wrapping. You can select this option at checkout."
+          question: "Modify Order?",
+          answer: "Changes possible within 2 hours. Contact support immediately."
         }
       ]
     },
     {
-      category: "Shipping & Returns",
+      category: "Logistics",
       items: [
         {
-          question: "What are your shipping times?",
-          answer: "Standard shipping takes 5-7 business days. Express shipping takes 2-3 business days. International delivery varies by location."
+          question: "Shipping Times?",
+          answer: "Standard: 5-7 days. Express: 2-3 days. International varies."
         },
         {
-          question: "What is your return policy?",
-          answer: "We offer a 30-day return policy for unworn items in original packaging with tags attached."
+          question: "Return Window?",
+          answer: "30 days for unworn items with original tags."
         }
       ]
     }
@@ -62,86 +58,93 @@ export default function FAQsPage() {
     : faqs;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-[#d8a4bc]/20 py-12 md:py-20 px-5">
-      <div className="container mx-auto max-w-4xl">
-        <BackButton />
+    <div className="max-w-4xl space-y-8 md:space-y-12">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6"
+      >
+        <div className="inline-block px-3 py-1 bg-[#d8a4bc]/10 rounded-full text-[#d8a4bc] text-[10px] font-black uppercase tracking-widest">Support</div>
+        <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-tight">Frequently Asked</h1>
+        <p className="text-sm md:text-base text-gray-400 font-medium leading-relaxed uppercase tracking-wider">
+          Quick solutions for common inquiries.
+        </p>
+      </motion.div>
 
-        <div className="text-center space-y-3 mb-12 md:mb-24">
-          <h1 className="text-2xl md:text-6xl font-bold tracking-tight text-gray-900 leading-tight">Frequently Asked Questions</h1>
-          <p className="text-sm md:text-lg text-gray-500 max-w-2xl mx-auto">Everything you need to know about our products, shipping, and service.</p>
-        </div>
+      {/* Search Bar */}
+      <div className="relative group">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#d8a4bc] transition-colors" size={16} />
+        <input
+          type="text"
+          placeholder="SEARCH TOPICS..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-gray-50 border border-gray-100 rounded-full py-5 pl-14 pr-8 text-[10px] font-black uppercase tracking-[0.2em] outline-none transition-all focus:bg-white focus:border-[#d8a4bc] focus:ring-4 focus:ring-[#d8a4bc]/5"
+        />
+      </div>
 
-        {/* Search Bar */}
-        <div className="relative max-w-2xl mx-auto mb-12 md:mb-20">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#d8a4bc] transition-colors" size={16} />
-          <input
-            type="text"
-            placeholder="Search FAQs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 md:py-5 pl-12 pr-6 text-sm md:text-base outline-none transition-all focus:bg-white focus:border-[#d8a4bc] focus:ring-4 focus:ring-[#d8a4bc]/5 shadow-sm"
-          />
-        </div>
-
-        <div className="space-y-12 md:space-y-16">
-          {filteredFaqs.map((section, sIdx) => (
-            <div key={sIdx} className="space-y-6 md:space-y-8">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 px-2">{section.category}</h2>
-              <div className="space-y-3 md:space-y-4">
-                {section.items.map((item, iIdx) => {
-                  const itemIndex = sIdx * 100 + iIdx;
-                  const isOpen = openItems.includes(itemIndex);
-                  return (
-                    <div
-                      key={iIdx}
-                      className={`border border-gray-100 rounded-2xl transition-all duration-300 ${isOpen ? 'bg-gray-50' : 'bg-white hover:border-[#d8a4bc]/30'}`}
+      <div className="space-y-16">
+        {filteredFaqs.map((section, sIdx) => (
+          <div key={sIdx} className="space-y-8">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-300 border-b border-gray-50 pb-4">{section.category}</h2>
+            <div className="grid gap-3">
+              {section.items.map((item, iIdx) => {
+                const itemIndex = sIdx * 100 + iIdx;
+                const isOpen = openItems.includes(itemIndex);
+                return (
+                  <div
+                    key={iIdx}
+                    className={`rounded-[32px] transition-all duration-300 border ${isOpen ? 'bg-black border-black text-white shadow-2xl' : 'bg-white border-gray-50'}`}
+                  >
+                    <button
+                      onClick={() => toggleItem(itemIndex)}
+                      className="w-full p-6 md:p-8 flex justify-between items-center text-left group"
                     >
-                      <button
-                        onClick={() => toggleItem(itemIndex)}
-                        className="w-full p-5 md:p-8 flex justify-between items-center text-left group"
-                      >
-                        <span className="font-semibold text-gray-800 text-sm md:text-lg group-hover:text-black transition-colors">{item.question}</span>
-                        <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-black' : 'text-gray-400'}`}>
-                          {isOpen ? <Minus size={18} /> : <Plus size={18} />}
-                        </div>
-                      </button>
-                      <AnimatePresence>
-                        {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-5 md:px-8 pb-6 md:pb-8 text-gray-600 text-xs md:text-base leading-relaxed border-t border-gray-100 pt-5 md:pt-8">
-                              {item.answer}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-              </div>
+                      <span className="text-[11px] font-black uppercase tracking-widest leading-tight">{item.question}</span>
+                      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${isOpen ? 'bg-[#d8a4bc] text-black rotate-180' : 'bg-gray-50 text-gray-400'}`}>
+                        {isOpen ? <Minus size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
+                      </div>
+                    </button>
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: "circOut" }}
+                        >
+                          <div className="px-6 md:px-8 pb-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-loose">
+                            {item.answer}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-
-        {/* Contact CTA */}
-        <div className="mt-20 md:mt-32 p-8 md:p-12 border border-gray-100 rounded-[32px] md:rounded-[40px] text-center space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900">Still have questions?</h3>
-          <p className="text-sm text-gray-500">Can't find what you're looking for? Reach out to our human support team.</p>
-          <div className="pt-4">
-            <Link
-              href="/help/contact"
-              className="inline-block bg-black text-white px-8 py-4 rounded-full font-bold hover:bg-gray-800 transition-all shadow-lg text-xs md:text-sm"
-            >
-              Contact Support
-            </Link>
           </div>
+        ))}
+      </div>
+
+      {/* Support CTA */}
+      <div className="p-8 md:p-12 border border-black rounded-[48px] text-center space-y-6">
+        <h3 className="text-xl font-black uppercase tracking-widest">Still Lost?</h3>
+        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-loose max-w-xs mx-auto">
+          Our support team is active 24/7 to solve your queries.
+        </p>
+        <div className="pt-2">
+          <Link
+            href="/help/contact"
+            className="inline-block bg-black text-white px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#d8a4bc] transition-all shadow-2xl"
+          >
+            Contact Human
+          </Link>
         </div>
       </div>
+
+      <HelpPagination />
     </div>
   );
 }

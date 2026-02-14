@@ -159,6 +159,7 @@ export default function CartSidebar() {
                           src={item.images[0]}
                           alt={item.name}
                           fill
+                          sizes="100px"
                           className="object-cover"
                         />
                       </div>
@@ -218,6 +219,7 @@ export default function CartSidebar() {
                           src={product.images[0]}
                           alt={product.name}
                           fill
+                          sizes="(max-width: 420px) 33vw, 150px"
                           className="object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                         {/* Quick Add Overlay */}

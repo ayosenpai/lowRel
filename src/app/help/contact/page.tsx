@@ -1,40 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronLeft,
-  MessageCircle,
-  Send,
-  Phone,
-  Mail,
-  Clock,
-  MapPin,
-  User,
-  Package,
-  CreditCard,
-  Truck,
-  HelpCircle,
-  RotateCcw
-} from 'lucide-react';
-
-// Simplified Link component for the preview environment
-const Link = ({ href, children, className }: { href: string, children: React.ReactNode, className?: string }) => (
-  <a href={href} className={className}>
-    {children}
-  </a>
-);
-
-// Inline BackButton component
-const BackButton = () => (
-  <button
-    onClick={() => window.history.back()}
-    className="flex items-center gap-2 text-black hover:text-[#d8a4bc] transition-colors mb-6 group"
-  >
-    <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-    <span className="font-medium">Back to Help Center</span>
-  </button>
-);
+import { motion } from 'framer-motion';
+import HelpPagination from '@/components/ui/help-pagination';
+import { Send, Phone, Mail, MapPin, Clock, CheckCircle } from 'lucide-react';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -46,149 +15,103 @@ export default function ContactPage() {
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert('Thank you for reaching out. Our support team will respond to your inquiry within 24-48 hours.');
-    setFormData({ name: '', email: '', orderNumber: '', subject: 'general', message: '' });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-[#d8a4bc]/20 py-12 md:py-20 px-5">
-      <div className="container mx-auto max-w-5xl">
-        <BackButton />
+    <div className="max-w-4xl space-y-8 md:space-y-12">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6"
+      >
+        <div className="inline-block px-3 py-1 bg-[#d8a4bc]/10 rounded-full text-[#d8a4bc] text-[10px] font-black uppercase tracking-widest">Support</div>
+        <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-tight">Get In Touch</h1>
+        <p className="text-sm md:text-base text-gray-400 font-medium leading-relaxed uppercase tracking-wider">
+          Our team is here to assist with any inquiries.
+        </p>
+      </motion.div>
 
-        <div className="text-center space-y-3 mb-12 md:mb-24">
-          <h1 className="text-2xl md:text-5xl font-bold tracking-tight text-gray-900 leading-tight">Contact Us</h1>
-          <p className="text-sm md:text-lg text-gray-500 max-w-xl mx-auto">Have a question or feedback? We'd love to hear from you. Please fill out the form below.</p>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
+        {/* Form */}
+        <form className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Full Name</label>
+              <input
+                type="text"
+                name="name"
+                placeholder="NAME"
+                className="w-full bg-gray-50 border border-gray-100 rounded-full py-4 px-6 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-white focus:border-black transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Email</label>
+              <input
+                type="email"
+                name="email"
+                placeholder="EMAIL@DOMAIN.COM"
+                className="w-full bg-gray-50 border border-gray-100 rounded-full py-4 px-6 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-white focus:border-black transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Order #</label>
+              <input
+                type="text"
+                name="orderNumber"
+                placeholder="OPTIONAL"
+                className="w-full bg-gray-50 border border-gray-100 rounded-full py-4 px-6 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-white focus:border-black transition-all"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Message</label>
+            <textarea
+              name="message"
+              rows={4}
+              placeholder="HOW CAN WE HELP?"
+              className="w-full bg-gray-50 border border-gray-100 rounded-[32px] py-6 px-6 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-white focus:border-black transition-all resize-none"
+            />
+          </div>
+          <button className="w-full bg-black text-white py-5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#d8a4bc] transition-all shadow-2xl active:scale-95">
+            Send Message <Send size={14} />
+          </button>
+        </form>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-24">
-          {/* Form Side */}
-          <div className="lg:col-span-7">
-            <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-xs font-bold text-gray-700 ml-1">Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter your name"
-                    className="w-full bg-white border border-gray-200 rounded-xl py-3 md:py-4 px-4 md:px-5 text-sm md:text-base outline-none transition-all focus:border-[#d8a4bc] focus:ring-4 focus:ring-[#d8a4bc]/5"
-                    required
-                  />
+        {/* Info */}
+        <div className="space-y-10">
+          <div className="p-8 md:p-10 bg-gray-50 rounded-[40px] border border-gray-100 space-y-8">
+            {[
+              { icon: <Mail size={18} />, label: 'Email', val: 'support@lowreligion.com' },
+              { icon: <Phone size={18} />, label: 'Phone', val: '1-800-LOWREL' },
+              { icon: <Clock size={18} />, label: 'Wait Time', val: '2-4 Hours' }
+            ].map((item, i) => (
+              <div key={i} className="flex gap-5 items-start">
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-[#d8a4bc] shadow-sm">
+                  {item.icon}
                 </div>
-                <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-xs font-bold text-gray-700 ml-1">Email Address</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="email@example.com"
-                    className="w-full bg-white border border-gray-200 rounded-xl py-3 md:py-4 px-4 md:px-5 text-sm md:text-base outline-none transition-all focus:border-[#d8a4bc] focus:ring-4 focus:ring-[#d8a4bc]/5"
-                    required
-                  />
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-gray-300">{item.label}</p>
+                  <p className="text-xs font-black uppercase tracking-widest">{item.val}</p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-xs font-bold text-gray-700 ml-1">Order Number (Optional)</label>
-                  <input
-                    type="text"
-                    name="orderNumber"
-                    value={formData.orderNumber}
-                    onChange={handleInputChange}
-                    placeholder="#12345"
-                    className="w-full bg-white border border-gray-200 rounded-xl py-3 md:py-4 px-4 md:px-5 text-sm md:text-base outline-none transition-all focus:border-[#d8a4bc] focus:ring-4 focus:ring-[#d8a4bc]/5"
-                  />
-                </div>
-                <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-xs font-bold text-gray-700 ml-1">Subject</label>
-                  <select
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    className="w-full bg-white border border-gray-200 rounded-xl py-3 md:py-4 px-4 md:px-5 text-sm md:text-base outline-none transition-all focus:border-[#d8a4bc] focus:ring-4 focus:ring-[#d8a4bc]/5 appearance-none"
-                  >
-                    <option value="general">General Inquiry</option>
-                    <option value="order">Order Status</option>
-                    <option value="return">Return Request</option>
-                    <option value="product">Product Question</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 md:space-y-2">
-                <label className="text-xs font-bold text-gray-700 ml-1">Message</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  rows={5}
-                  placeholder="How can we help?"
-                  className="w-full bg-white border border-gray-200 rounded-xl py-3 md:py-4 px-4 md:px-5 text-sm md:text-base outline-none transition-all focus:border-[#d8a4bc] focus:ring-4 focus:ring-[#d8a4bc]/5 resize-none"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-black text-white py-4 md:py-5 rounded-full font-bold text-sm md:text-base hover:bg-gray-800 transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-3"
-              >
-                Send Message
-                <Send size={16} className="md:w-4.5 md:h-4.5" />
-              </button>
-            </form>
+            ))}
           </div>
 
-          {/* Info Side */}
-          <div className="lg:col-span-5 space-y-8 md:space-y-12">
-            <div className="bg-gray-50 p-6 md:p-12 rounded-[32px] md:rounded-[40px] space-y-8 md:space-y-12">
-              <div className="space-y-2 md:space-y-4">
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900">Get in touch</h3>
-                <p className="text-sm text-gray-500">Prefer other methods? You can also reach us via phone or email during business hours.</p>
-              </div>
-
-              <div className="space-y-6 md:space-y-8">
-                {[
-                  { icon: <Phone size={22} />, label: 'Phone', val: '1-800-LOWREL', sub: 'Mon-Fri 9am-6pm EST' },
-                  { icon: <Mail size={22} />, label: 'Email', val: 'support@lowreligion.com', sub: '24/7 Response time' },
-                  { icon: <MapPin size={22} />, label: 'Location', val: 'New York, NY', sub: 'Corporate Headquarters' }
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4 md:gap-6 items-start">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white flex items-center justify-center text-[#d8a4bc] shadow-sm shrink-0">
-                      {item.icon}
-                    </div>
-                    <div className="space-y-0.5 md:space-y-1">
-                      <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">{item.label}</p>
-                      <p className="text-base md:text-lg font-bold text-gray-900">{item.val}</p>
-                      <p className="text-xs md:text-sm text-gray-500">{item.sub}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="p-8 md:p-10 bg-black text-white rounded-[40px] space-y-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle size={18} className="text-[#d8a4bc]" />
+              <h3 className="text-xs font-black uppercase tracking-widest">Global Support</h3>
             </div>
-
-            {/* Support Metrics */}
-            <div className="p-6 md:p-10 border border-gray-100 rounded-[32px] md:rounded-[40px] bg-white shadow-sm">
-              <div className="flex items-center gap-3 md:gap-4 text-gray-500">
-                <Clock size={18} className="text-[#d8a4bc] md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-semibold">Typical response time: <span className="text-gray-900 font-bold">2-4 Hours</span></span>
-              </div>
-            </div>
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-loose">
+              Our team operates across multiple timezones to ensure you never wait more than a few hours for a response.
+            </p>
           </div>
         </div>
       </div>
+
+      <HelpPagination />
     </div>
   );
 }

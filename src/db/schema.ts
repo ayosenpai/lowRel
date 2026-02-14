@@ -116,6 +116,7 @@ export const userEvents = pgTable('user_events', {
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id'), // From Supabase Auth (if applicable)
     customerId: uuid('customer_id').references(() => customers.id), // Stitched Customer Profile
+    visitorId: uuid('visitor_id').references(() => visitors.id), // Stitched Visitor Profile
     sessionId: text('session_id').notNull(),
     eventType: text('event_type').notNull(), // 'page_view', 'add_to_cart', 'begin_checkout', 'purchase'
     path: text('path'),
@@ -126,6 +127,25 @@ export const userEvents = pgTable('user_events', {
         sessionIdIdx: index('session_id_idx').on(table.sessionId),
         eventTypeIdx: index('event_type_idx').on(table.eventType),
         eventCustomerIdx: index('event_customer_idx').on(table.customerId),
+        eventVisitorIdx: index('event_visitor_idx').on(table.visitorId),
+    };
+});
+
+export const visitors = pgTable('visitors', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    profileId: uuid('profile_id').references(() => profiles.id), // Linked to registered user
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    location: jsonb('location'), // Geo-location data
+    visitCount: integer('visit_count').default(1),
+    consentGiven: boolean('consent_given').default(false),
+    meta: jsonb('meta'), // Any extra metadata
+    lastSeenAt: timestamp('last_seen_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        visitorIpIdx: index('visitor_ip_idx').on(table.ipAddress),
+        visitorProfileIdx: index('visitor_profile_idx').on(table.profileId),
     };
 });
 
@@ -170,4 +190,16 @@ export const userEventsRelations = relations(userEvents, ({ one }) => ({
         fields: [userEvents.customerId],
         references: [customers.id],
     }),
+    visitor: one(visitors, {
+        fields: [userEvents.visitorId],
+        references: [visitors.id],
+    }),
+}));
+
+export const visitorsRelations = relations(visitors, ({ one, many }) => ({
+    profile: one(profiles, {
+        fields: [visitors.profileId],
+        references: [profiles.id],
+    }),
+    events: many(userEvents),
 }));

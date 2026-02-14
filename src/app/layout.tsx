@@ -11,6 +11,8 @@ import PageTracker from '@/components/analytics/PageTracker';
 import { Suspense } from 'react';
 import CartSidebar from "@/components/ui/cart-sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import TrackingProvider from "@/components/tracking-provider";
+import ModalSequenceManager from "@/components/ModalSequenceManager";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -75,20 +77,47 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
       <head>
+
+
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-L9NZEQMD9F"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('consent', 'default', {
+              'analytics_storage': 'granted',
+              'ad_storage': 'granted',
+              'ad_user_data': 'granted',
+              'ad_personalization': 'granted',
+              'wait_for_update': 500
+            });
+
+            gtag('config', 'G-L9NZEQMD9F');
+          `}
+        </Script>
+
         <link rel="preconnect" href="https://slelguoygbfzlpylpxfs.supabase.co" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://slelguoygbfzlpylpxfs.supabase.co" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+
       </head>
       <body className="antialiased">
-
 
         <CartProvider>
           <WishlistProvider>
             <CheckoutProvider>
+              <TrackingProvider />
               <a href="#main-content" className="skip-to-content">
                 Skip to main content
               </a>
@@ -101,6 +130,7 @@ export default function RootLayout({
               </div>
               <CartSidebar />
               {/* <VisualEditsMessenger /> */}
+              <ModalSequenceManager />
               <Toaster />
             </CheckoutProvider>
           </WishlistProvider>
@@ -109,3 +139,4 @@ export default function RootLayout({
     </html>
   );
 }
+

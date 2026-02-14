@@ -26,8 +26,20 @@ export async function middleware(request: NextRequest) {
     const country = request.headers.get('x-vercel-ip-country') || 'IN'; // Default to IN for local testing
     const region = country === 'IN' ? 'IN' : 'GLOBAL';
 
+    // Visitor Tracking Logic
+    let visitorId = request.cookies.get('visitor_id')?.value;
+    if (!visitorId) {
+        visitorId = crypto.randomUUID();
+        response.cookies.set('visitor_id', visitorId, {
+            path: '/',
+            maxAge: 60 * 60 * 24 * 365, // 1 year
+            sameSite: 'lax',
+        });
+    }
+
     // Set a header that our Server Components can read
     response.headers.set('x-region', region);
+    response.headers.set('x-visitor-id', visitorId);
 
     // Also set a cookie for client-side persistence/access if needed
     response.cookies.set('x-region', region, { path: '/' });

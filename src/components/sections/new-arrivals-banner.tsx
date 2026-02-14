@@ -19,7 +19,7 @@ const MovingCarousel = ({ products: initialProducts = [] }: { products?: any[] }
   const marqueeProducts = [...baseProducts, ...baseProducts, ...baseProducts];
 
   return (
-    <section className="w-full bg-[#d8a4bc] py-10 border-t border-black overflow-hidden">
+    <section className="w-full bg-[#d8a4bc] py-1   border-t border-black overflow-hidden">
       <div className="flex flex-col gap-6">
         <div className="px-5">
           <h2 className="text-black text-[18px] font-bold uppercase tracking-[0.2em]">
