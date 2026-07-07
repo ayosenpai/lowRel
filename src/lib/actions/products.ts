@@ -102,5 +102,5 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
 const getCachedProducts = unstable_cache(
     async (options: GetProductsOptions) => fetchRawProducts(options),
     ['products'],
-    { revalidate: 0, tags: ['products'] }
+    { revalidate: false, tags: ['products'] }
 );
