@@ -1,10 +1,8 @@
 "use client";
 
-import Image from "next/image";
-
-
 import Link from "next/link";
 import { useState } from "react";
+import SupabaseImage from "@/components/SupabaseImage";
 
 interface Product {
     id: string;
@@ -49,7 +47,7 @@ export default function CompleteTheLook({ products, currentProductId }: Complete
                                     <div
                                         className="relative w-full h-full transition-transform duration-300 group-hover:scale-105"
                                     >
-                                        <Image
+                                        <SupabaseImage
                                             src={product.images[0]}
                                             alt={product.name}
                                             fill

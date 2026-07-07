@@ -1,7 +1,6 @@
 
 "use client";
 
-import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +13,7 @@ import { trackEvent } from "@/lib/actions/analytics";
 import SkeletonLoader from "@/components/ui/skeleton-loader";
 import CompleteTheLook from "@/components/sections/complete-the-look";
 import ProductReviews from "@/components/sections/product-reviews";
+import SupabaseImage from "@/components/SupabaseImage";
 
 export default function ProductDetailsClient({ product, relatedProducts }: { product: any; relatedProducts?: any[] }) {
     const router = useRouter();
@@ -130,7 +130,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     return (
         <div className="space-y-4">
             {/* Breadcrumb Navigation - Full Width Header */}
-            <nav className="text-[8px] uppercase tracking-[0.25em] text-[#9a9a9a] font-medium flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity duration-300 px-5 lg:px-10">
+            <nav className="text-[8px] uppercase tracking-[0.25em] text-gray-500 font-medium flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity duration-300 px-5 lg:px-10 pt-2">
                 <Link href="/" className="hover:text-black transition-colors">Home</Link>
                 <span className="text-[8px] opacity-60">/</span>
                 <Link href={`/collections/${product.category?.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-black transition-colors">
@@ -142,56 +142,72 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left: Image Gallery */}
-                <div className="lg:col-span-7 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {product.images?.map((image: string, index: number) => (
-                            <div
-                                key={index}
-                                className={`aspect-[9/14] relative bg-[#f5f5f5] overflow-hidden group ${index === 0 ? 'md:col-span-2' : ''}`}
-                            >
-                                {/* Skeleton Loader */}
-                                {!imageLoaded[index] && (
-                                    <div className="absolute inset-0 z-10">
-                                        <SkeletonLoader variant="product-image" />
-                                    </div>
-                                )}
-
-                                {/* Product Image */}
-                                <div
-                                    className="relative w-full h-full transition-transform duration-500 hover:scale-105 cursor-zoom-in"
-                                    onClick={() => openLightbox(index)}
-                                >
-                                    <Image
-                                        src={image}
-                                        alt={`${product.name} - ${index + 1}`}
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 100vw, 50vw"
-                                        priority={index === 0}
-                                        onLoad={() => setImageLoaded(prev => ({ ...prev, [index]: true }))}
-                                    />
-                                </div>
-
-
-                                {/* Wishlist Heart Overlay */}
-                                <button
-                                    onClick={handleToggleWishlist}
-                                    className="absolute bottom-4 right-4 z-20 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all group/heart hover:scale-110 active:scale-90"
-                                >
-                                    <div
-                                        className={`transition-transform duration-300 ${isFavorited ? 'scale-110' : ''}`}
-                                    >
-                                        <Heart
-                                            className={`w-5 h-5 transition-colors ${isFavorited
-                                                ? 'fill-black text-black'
-                                                : 'text-gray-400 group-hover/heart:text-black'
-                                                }`}
-                                        />
-                                    </div>
-                                </button>
+                <div className="lg:col-span-7 space-y-2">
+                    {/* Main Featured Image */}
+                    <div className="aspect-[9/14] relative bg-[#f5f5f5] overflow-hidden group">
+                        {!imageLoaded[currentImageIndex] && (
+                            <div className="absolute inset-0 z-10">
+                                <SkeletonLoader variant="product-image" />
                             </div>
-                        ))}
+                        )}
+
+                        <AnimatePresence initial={false} custom={currentImageIndex}>
+                            <motion.div
+                                key={currentImageIndex}
+                                className="relative w-full h-full cursor-zoom-in"
+                                onClick={() => openLightbox(currentImageIndex)}
+                                initial={{ x: 300, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                exit={{ x: -300, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                onDragEnd={(event, { offset, velocity }) => {
+                                    const swipe = Math.abs(offset.x);
+                                    if (swipe > 50) {
+                                        offset.x > 0 ? prevImage() : nextImage();
+                                    }
+                                }}
+                            >
+                                <SupabaseImage
+                                    src={product.images?.[currentImageIndex] || ''}
+                                    alt={`${product.name} - ${currentImageIndex + 1}`}
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                    priority
+                                    onLoad={() => setImageLoaded(prev => ({ ...prev, [currentImageIndex]: true }))}
+                                />
+                            </motion.div>
+                        </AnimatePresence>
+
+                        <button
+                            onClick={handleToggleWishlist}
+                            className="absolute top-4 right-4 z-20 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all group/heart hover:scale-110 active:scale-90"
+                        >
+                            <Heart
+                                className={`w-5 h-5 transition-colors ${isFavorited
+                                    ? 'fill-black text-black'
+                                    : 'text-gray-400 group-hover/heart:text-black'
+                                    }`}
+                            />
+                        </button>
                     </div>
+
+                    {/* Dot Pagination */}
+                    {product.images && product.images.length > 1 && (
+                        <div className="flex items-center justify-center gap-2 py-2">
+                            {product.images.map((_: any, index: number) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                    className={`w-2 h-2 transition-colors duration-300 ${currentImageIndex === index ? 'bg-black' : 'bg-gray-300 hover:bg-gray-400'}`}
+                                    style={{ borderRadius: '9999px' }}
+                                    aria-label={`Go to image ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Right: Product Info */}
@@ -295,9 +311,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                             <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{
-                                    scale: isZoomed ? 2.5 : 1,
-                                    x: isZoomed ? undefined : 0,
-                                    y: isZoomed ? undefined : 0,
+                                    scale: isZoomed ? 1.6 : 1,
                                     opacity: 1,
                                 }}
                                 drag={isZoomed}
@@ -305,7 +319,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                                 dragElastic={0.05}
                                 dragMomentum={false}
                                 exit={{ scale: 0.9, opacity: 0 }}
-                                transition={{ type: "spring", damping: 30, stiffness: 150 }}
+                                transition={{ type: "spring", damping: 22, stiffness: 150 }}
                                 className={`relative w-full h-full flex items-center justify-center ${isZoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
                             >
                                 <div
@@ -313,13 +327,12 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                                     onDoubleClick={handleDoubleClick}
                                     onTouchEnd={handleDoubleTap}
                                 >
-                                    <Image
+                                    <SupabaseImage
                                         src={product.images[currentImageIndex]}
                                         alt={product.name}
                                         fill
                                         className="object-cover md:object-contain pointer-events-none select-none"
                                         priority
-                                        quality={100}
                                     />
                                 </div>
                             </motion.div>
