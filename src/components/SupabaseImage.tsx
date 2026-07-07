@@ -7,5 +7,5 @@ import supabaseLoader from "@/lib/supabase-image-loader";
 // Use this instead of plain <Image> for Supabase product bucket images
 // in Server Components where passing loader as a prop would cause a hydration error.
 export default function SupabaseImage(props: Omit<ImageProps, "loader">) {
-    return <Image loader={supabaseLoader} {...props} />;
+    return <Image loader={supabaseLoader} unoptimized={true} {...props} />;
 }
