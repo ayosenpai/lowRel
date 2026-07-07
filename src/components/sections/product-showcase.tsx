@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { products } from '@/lib/data';
+import SupabaseImage from '@/components/SupabaseImage';
 
 
 export default function ProductShowcase({ products: initialProducts = [] }: { products?: any[] }) {
@@ -38,11 +38,11 @@ function ProductCard({ product, index }: { product: any, index: number }) {
       <Link href={`/products/${product.handle}`} className="block w-full h-full">
         <div className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-white">
           <div className="absolute inset-0">
-            <Image
+            <SupabaseImage
               src={isHovered && product.images[1] ? product.images[1] : product.images[0]}
               alt={product.name}
               fill
-              className="object-contain p-1 transition-opacity duration-300"
+              className="object-cover transition-opacity duration-300"
               sizes="(max-width: 768px) 33vw, 33vw"
               loading="lazy"
             />

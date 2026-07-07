@@ -1,19 +1,13 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-
-import { products } from "@/lib/data";
+import SupabaseImage from '@/components/SupabaseImage';
 
 const MovingCarousel = ({ products: initialProducts = [] }: { products?: any[] }) => {
-  // Use products from props if available, otherwise fallback to static data
-  const baseProducts = initialProducts.length > 0 ? initialProducts : products.map(p => ({
-    ...p,
-    price: p.priceUSD, // Fallback to USD for static usage
-    symbol: '$'
-  }));
+  // Use products from props. The fallback to static data has been removed.
+  const baseProducts = initialProducts;
 
   // Triple the products to ensure smooth infinite loop
   const marqueeProducts = [...baseProducts, ...baseProducts, ...baseProducts];
@@ -46,7 +40,7 @@ const MovingCarousel = ({ products: initialProducts = [] }: { products?: any[] }
                 className="flex-shrink-0 w-[200px] md:w-[200px] group"
               >
                 <div className="relative aspect-[3/5] overflow-hidden bg-[#111111]">
-                  <Image
+                  <SupabaseImage
                     src={product.images[0]}
                     alt={product.name}
                     fill
