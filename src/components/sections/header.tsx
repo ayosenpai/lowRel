@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, X } from "lucide-react";
@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import SearchOverlay from '@/components/ui/search-overlay';
 
 interface HeaderProps {
-  variant?: 'default' | 'solid';
+  variant?: 'default' | 'solid' | 'transparent';
 }
 
 const supabase = createClient();
@@ -23,10 +23,22 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
   const { state, dispatch } = useCart();
 
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
 
-  // Logic to determine background color
-  const isSolid = variant === 'solid' || isScrolled;
+  // Logic to determine background style
+  const isSolid = variant === 'solid' || (variant === 'default' && isScrolled);
+  const isGlass = variant === 'default' && !isScrolled;
+  const isTransparent = variant === 'transparent' && !isScrolled;
+
+  const navBackgroundClass = isSolid
+    ? "bg-black border-[#333333]"
+    : isGlass
+      ? "bg-black/30 backdrop-blur-xl backdrop-saturate-150 border-white/10"
+      : isTransparent
+        ? "bg-transparent border-transparent"
+        : "bg-transparent border-transparent";
+
+  const navTextClass = isTransparent ? "text-white" : "text-white";
 
   useEffect(() => {
     const getUser = async () => {
@@ -61,19 +73,22 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
       const currentScrollY = window.scrollY;
       setIsScrolled(currentScrollY > 10);
 
-      // Hide/Show logic
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+      // Hide/Show logic - simpler approach
+      const isAtTop = currentScrollY < 100;
+      const threshold = isAtTop ? 30 : 0;
+
+      if (currentScrollY > lastScrollY.current + threshold && currentScrollY > 50) {
         setIsVisible(false);
-      } else {
+      } else if (currentScrollY < lastScrollY.current) {
         setIsVisible(true);
       }
 
-      setLastScrollY(currentScrollY);
+      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   const navAssets = {
     logo: "/assets/uni.png",
@@ -100,20 +115,20 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
             transform: isVisible ? 'translateY(0)' : 'translateY(-100%)',
             transition: 'transform 0.3s ease-out'
           }}
-          className="w-full bg-[#d8a4bc] h-[30px] flex items-center justify-center border-b border-black absolute top-0 z-50"
+          className={`w-full bg-[#d8a4bc] h-[30px] flex items-center justify-center absolute top-0 z-50 ${isTransparent ? '' : 'border-b border-black'}`}
         >
-          <span className="text-[10px] text-black font-bold tracking-[0.1em] uppercase">
-            USE CODE "FAMILY15" FOR 15% OFF
+          <span className="text-[10px] text-black font-bold tracking-[0.05em] uppercase">
+            USE "MATTERBABY" FOR 15% OFF
           </span>
         </div>
 
         {/* Main Navigation */}
         <nav
           style={{
-            transform: `translateY(${isVisible ? (isVisible && lastScrollY < 30 ? 30 : 0) : -100}px)`,
-            transition: 'transform 0.3s ease-out, background-color 0.3s, border-color 0.3s'
+            transform: `translateY(${isVisible ? 30 : -100}px)`,
+            transition: 'transform 0.3s ease-out, background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s'
           }}
-          className={`w-full h-[64px] flex items-center justify-between px-5 xl:px-10 border-b absolute top-0 ${isSolid ? "bg-black border-[#333333]" : "bg-transparent border-transparent"}`}
+          className={`w-full h-[64px] flex items-center justify-between px-5 xl:px-10 ${isTransparent ? '' : 'border-b'} absolute top-0 ${navBackgroundClass}`}
         >
           {/* Left: Mobile Menu & Logo */}
           <div className="flex items-center gap-6">
@@ -135,10 +150,10 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
               <Link
                 key={item.name}
                 href={item.href}
-                className="relative text-[13px] font-bold tracking-[0.1em] uppercase group text-black"
+                className={`relative text-[13px] font-bold tracking-[0.1em] uppercase group ${navTextClass}`}
               >
                 {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-[2px] transition-all group-hover:w-full bg-black" />
+                <span className={`absolute -bottom-1 left-0 w-0 h-[2px] transition-all group-hover:w-full ${isTransparent ? 'bg-white' : 'bg-black'}`} />
               </Link>
             ))}
           </div>
@@ -160,12 +175,12 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
                     className="flex items-center justify-center p-1 relative"
                   >
                     <ShoppingBag
-                      className="w-[22px] h-[20px] xl:w-[26px] xl:h-[22px] text-white"
+                      className="w-[22px] h-[22px] xl:w-[26px] xl:h-[22px] text-white"
                       fill={state.items.length > 0 ? "white" : "none"}
                       strokeWidth={1.5}
                     />
                     {state.items.reduce((sum, item) => sum + item.quantity, 0) > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-white text-black text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                      <span className={`absolute -top-1 -right-1 text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold ${isTransparent ? 'bg-black text-white' : 'bg-white text-black'}`}>
                         {state.items.reduce((sum, item) => sum + item.quantity, 0)}
                       </span>
                     )}
@@ -178,11 +193,11 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
                     }}
                     className="flex items-center justify-center p-1 relative"
                   >
-                    <Image src={item.icon!} alt={item.alt} width={26} height={22} className="w-[22px] h-[20px] xl:w-[26px] xl:h-[22px]" />
+                    <Image src={item.icon!} alt={item.alt} width={26} height={22} className="w-[22px] h-[22px] xl:w-[26px] xl:h-[26px]" />
                   </button>
                 ) : (
                   <Link href={item.href!} className="flex items-center justify-center p-1 relative">
-                    <Image src={item.icon!} alt={item.alt} width={26} height={22} className="w-[22px] h-[20px] xl:w-[26px] xl:h-[22px]" />
+                    <Image src={item.icon!} alt={item.alt} width={26} height={22} className="w-[22px] h-[22px] xl:w-[26px] xl:h-[26px]" />
                   </Link>
                 )}
               </div>
