@@ -1,5 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
+import SupabaseImage from '@/components/SupabaseImage';
 
 const HeroSale = () => {
   const heroAsset = "https://ojmqttdrbundpodfusoe.supabase.co/storage/v1/object/public/LR_img/T-shirts/lowrel Fe/1.webp";
@@ -8,7 +8,7 @@ const HeroSale = () => {
     <section className="relative w-full overflow-hidden">
       <div className="relative h-[80vh] min-h-[500px] w-full md:h-[85vh] lg:h-[100vh]">
         <div className="absolute inset-0">
-          <Image
+          <SupabaseImage
             src={heroAsset}
             alt="Winter Sale - Model with ice cross"
             fill
