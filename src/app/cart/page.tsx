@@ -3,10 +3,10 @@
 import { useCart } from '@/lib/cart-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import BackButton from '@/components/ui/back-button';
 import { trackEvent } from '@/lib/actions/analytics';
+import SupabaseImage from '@/components/SupabaseImage';
 
 export default function CartPage() {
   const { state, dispatch } = useCart();
@@ -84,7 +84,7 @@ export default function CartPage() {
                 className="bg-black text-[#d8a4bc] p-4 flex gap-4"
               >
                 <div className="relative w-24 h-32 bg-gray-100">
-                  <Image
+                  <SupabaseImage
                     src={item.images[0]}
                     alt={item.name}
                     fill

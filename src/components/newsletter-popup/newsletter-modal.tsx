@@ -99,6 +99,7 @@ export default function NewsletterModal({ isOpen, onClose }: NewsletterModalProp
                                 src="/products/img (4).png"
                                 alt="Newsletter Promo"
                                 fill
+                                unoptimized={true}
                                 sizes="(max-width: 768px) 100vw, 300px"
                                 className="object-cover grayscale hover:grayscale-0 transition-all duration-700"
                                 priority
