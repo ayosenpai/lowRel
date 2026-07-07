@@ -5,10 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { products } from '@/lib/data';
 import { getProducts } from '@/lib/actions/products';
 import { track } from '@/lib/analytics-client';
+import SupabaseImage from '@/components/SupabaseImage';
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -136,7 +135,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                                             className="flex items-center gap-4 p-2 hover:bg-gray-50 transition-colors group"
                                                         >
                                                             <div className="relative w-12 aspect-[3/4] bg-gray-100 flex-shrink-0">
-                                                                <Image
+                                                                <SupabaseImage
                                                                     src={product.images[0]}
                                                                     alt={product.name}
                                                                     fill

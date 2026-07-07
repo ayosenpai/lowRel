@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useActionState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { X, ShoppingBag } from 'lucide-react';
 import Header from '@/components/sections/header';
 import Footer from '@/components/sections/footer';
@@ -10,6 +9,7 @@ import { useWishlist } from '@/lib/wishlist-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { login } from '@/app/login/actions';
+import SupabaseImage from '@/components/SupabaseImage';
 
 export default function WishlistPage() {
     const { state, dispatch } = useWishlist();
@@ -149,7 +149,7 @@ export default function WishlistPage() {
 
                                     <Link href={`/products/${product.handle}`} className="block">
                                         <div className="aspect-[3/4] relative bg-gray-100 mb-4 overflow-hidden">
-                                            <Image
+                                            <SupabaseImage
                                                 src={product.images[0]}
                                                 alt={product.name}
                                                 fill

@@ -4,15 +4,29 @@ import { useCart } from '@/lib/cart-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useState } from 'react';
-import { products } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { getProducts } from '@/lib/actions/products';
 import { trackEvent } from '@/lib/actions/analytics';
 import confetti from 'canvas-confetti';
+import { Product } from '@/lib/types';
+import SupabaseImage from '@/components/SupabaseImage';
 
 export default function CartSidebar() {
   const { state, dispatch } = useCart();
   const [addingId, setAddingId] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      // Fetch 3 products to recommend
+      const { products: recommendedProducts } = await getProducts({ limit: 3, sort: 'newest' });
+      setRecommendations(recommendedProducts as unknown as Product[]);
+    };
+
+    if (state.isOpen) {
+      fetchRecommendations();
+    }
+  }, [state.isOpen]);
 
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity < 1) {
@@ -87,14 +101,7 @@ export default function CartSidebar() {
     }, 600);
   };
 
-  // Recommendations (taking first 3 products for now)
-  const recommendations = [products[3], products[4], products[7]]
-    .filter(Boolean)
-    .map(p => ({
-      ...p,
-      price: p.priceUSD, // Default to USD for static recommendations
-      symbol: '$'
-    }));
+
 
   return (
     <AnimatePresence>
@@ -155,7 +162,7 @@ export default function CartSidebar() {
                       className="flex gap-5"
                     >
                       <div className="relative w-[100px] aspect-[4/5] bg-gray-100 flex-shrink-0">
-                        <Image
+                        <SupabaseImage
                           src={item.images[0]}
                           alt={item.name}
                           fill
@@ -215,7 +222,7 @@ export default function CartSidebar() {
                   {recommendations.map((product) => (
                     <div key={product.id} className="group relative">
                       <div className="aspect-[4/5] relative bg-gray-100 mb-2 overflow-hidden">
-                        <Image
+                        <SupabaseImage
                           src={product.images[0]}
                           alt={product.name}
                           fill
