@@ -2,6 +2,7 @@
 import { getAdminProducts } from '@/lib/actions/admin';
 import Link from 'next/link';
 import Image from 'next/image';
+import SupabaseImage from '@/components/SupabaseImage';
 import {
     Plus,
     Search,
@@ -73,7 +74,7 @@ export default async function AdminProductsPage() {
                                         <div className="flex items-center gap-5">
                                             <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 shadow-sm transition-transform group-hover:scale-105">
                                                 {product.images?.[0] ? (
-                                                    <Image
+                                                    <SupabaseImage
                                                         src={product.images[0]}
                                                         alt={product.name}
                                                         fill

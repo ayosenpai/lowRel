@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Product } from '@/lib/data';
+import { Product } from '@/lib/types';
 
 export interface CartItem extends Product {
   quantity: number;
@@ -48,7 +48,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return {
         ...state,
         items: newItems,
-        total: newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        total: newItems.reduce((sum, item) => sum + ((item.price ?? 0) * item.quantity), 0),
       };
     }
 
@@ -57,7 +57,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return {
         ...state,
         items: filteredItems,
-        total: filteredItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        total: filteredItems.reduce((sum, item) => sum + ((item.price ?? 0) * item.quantity), 0),
       };
 
     case 'UPDATE_QUANTITY':
@@ -69,7 +69,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return {
         ...state,
         items: updatedItems,
-        total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        total: updatedItems.reduce((sum, item) => sum + ((item.price ?? 0) * item.quantity), 0),
       };
 
     case 'TOGGLE_CART':

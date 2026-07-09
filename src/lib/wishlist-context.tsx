@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { Product } from '@/lib/data';
+import { Product } from '@/lib/types';
 
 export interface WishlistItem extends Product { }
 

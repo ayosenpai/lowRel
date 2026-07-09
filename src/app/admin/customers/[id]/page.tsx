@@ -93,7 +93,7 @@ export default async function CustomerProfilePage({
                                         <p className="text-sm text-gray-500 mt-1">
                                             {event.path}
                                         </p>
-                                        {event.payload && Object.keys(event.payload as object).length > 0 && (
+                                        {!!event.payload && Object.keys(event.payload as object).length > 0 && (
                                             <div className="mt-2 bg-gray-50 p-2 rounded text-xs text-gray-600 font-mono overflow-x-auto">
                                                 {JSON.stringify(event.payload, null, 2)}
                                             </div>

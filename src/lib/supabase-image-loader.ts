@@ -11,6 +11,16 @@ interface ImageLoaderProps {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ojmqttdrbundpodfusoe.supabase.co';
 
 /**
+ * Encode local public paths so filenames/folders with spaces load reliably.
+ */
+function encodeLocalPath(path: string): string {
+  return path
+    .split('/')
+    .map((segment, index) => (index === 0 ? segment : encodeURIComponent(segment)))
+    .join('/');
+}
+
+/**
  * Custom image loader for Next.js.
  * Uses the plain public URL from Supabase Storage (no transformations needed).
  * Compatible with all Supabase plans - Free tier included.
@@ -19,7 +29,11 @@ export default function supabaseLoader({ src, width, quality }: ImageLoaderProps
   if (!src) return '';
 
   // Pass through local/static assets and external URLs from other domains untouched
-  if (src.startsWith('/') || src.startsWith('data:')) {
+  if (src.startsWith('/')) {
+    return encodeLocalPath(src);
+  }
+
+  if (src.startsWith('data:')) {
     return src;
   }
 

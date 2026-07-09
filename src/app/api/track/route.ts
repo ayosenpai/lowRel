@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { visitors } from '@/db/schema';
+import { visitors, profiles } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
-import { sql, eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
         const city = request.headers.get('x-vercel-ip-city');
 
         const body = await request.json().catch(() => ({}));
-        const path = body.path || '/';
 
         if (!visitorId) {
             return NextResponse.json({ error: 'No visitor ID found' }, { status: 400 });
@@ -23,47 +22,28 @@ export async function POST(request: NextRequest) {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
+        // Ensure user profile exists in database if they are logged in via Supabase Auth
+        // to prevent foreign key errors with visitor profile stitching
+        if (user?.id) {
+            const fullName = user.user_metadata?.full_name || '';
+            const [firstName, ...lastNameParts] = fullName.split(' ');
+            const lastName = lastNameParts.join(' ');
+
+            await db.insert(profiles).values({
+                id: user.id,
+                email: user.email || '',
+                firstName: firstName || null,
+                lastName: lastName || null,
+                avatarUrl: user.user_metadata?.avatar_url || null,
+                role: 'user',
+            }).onConflictDoNothing();
+        }
+
         const locationData = {
             country,
             region,
             city,
         };
-
-        // Check if visitor exists to determine if we insert or update
-        // Actually onConflictDoUpdate is better
-
-        await db.insert(visitors).values({
-            id: visitorId,
-            profileId: user?.id || null,
-            ipAddress: ip,
-            userAgent: userAgent,
-            location: locationData,
-            visitCount: 1,
-            lastSeenAt: new Date(),
-        }).onConflictDoUpdate({
-            target: visitors.id,
-            set: {
-                profileId: user?.id || sql`visitors.profile_id`, // Update profile if user logs in, else keep existing
-                ipAddress: ip,
-                userAgent: userAgent,
-                location: locationData,
-                visitCount: sql`${visitors.visitCount} + 1`,
-                lastSeenAt: new Date(),
-            }
-        });
-
-        // Use eq to conditionally update profile_id if user is currently logged in, 
-        // effectively linking the anonymous visitor to the user.
-        // The above onConflictDoUpdate logic:
-        // user?.id || sql`visitors.profile_id` 
-        // If user is logged in (user.id exists), update profileId.
-        // If user is NOT logged in (user is null), keep the existing profileId (do not overwrite with null if it was already set).
-
-        // However, if user?.id is undefined, the SQL might be: profileId: NULL || existing.
-        // If user is null, we want to Keep existing.
-        // syntax in JS: user?.id ? user.id : sql`visitors.profile_id`
-
-        // Let's refine the Update Set object.
 
         const cookieConsent = request.cookies.get('cookie_consent')?.value;
         const consentGiven = cookieConsent === 'all' || cookieConsent === 'true';

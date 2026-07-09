@@ -2,6 +2,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import SupabaseImage from '@/components/SupabaseImage';
 import Header from '@/components/sections/header';
 import Footer from '@/components/sections/footer';
 import { getProducts } from '@/lib/actions/products';
@@ -75,8 +76,8 @@ export default async function CollectionPage({ params, searchParams }: {
                             {displayProducts.map((product) => (
                                 <Link key={product.id} href={`/products/${product.handle}`} className="group block">
                                     <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden mb-4">
-                                        <Image
-                                            src={product.images[0]}
+                                        <SupabaseImage
+                                            src={product.images?.[0] || ''}
                                             alt={product.name}
                                             fill
                                             className="object-cover transition-transform duration-500 group-hover:scale-105"
