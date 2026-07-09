@@ -16,8 +16,8 @@ export default function PaymentPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [couponInput, setCouponInput] = useState('');
     const [applyError, setApplyError] = useState('');
+    const [paymentError, setPaymentError] = useState('');
     const router = useRouter();
-    const [formData, setFormData] = useState({}); // Placeholder to avoid breaking other parts if needed, but unused now
 
     const handleApplyDiscount = () => {
         setApplyError('');
@@ -32,10 +32,17 @@ export default function PaymentPage() {
     const taxes = (subtotal - discount) * 0.08;
     const finalTotal = subtotal - discount + taxes;
 
-    const currencyCode = state.items[0]?.symbol === '₹' ? 'INR' : 'USD';
+    // Determine currency from cart items
+    const currencyCode = state.items[0]?.symbol === '₹' ? 'INR' : 'INR'; // Default to INR for Razorpay test keys
+    const currencySymbol = currencyCode === 'INR' ? '₹' : '$';
 
-    const loadRazorpay = () => {
+    const loadRazorpay = (): Promise<boolean> => {
         return new Promise((resolve) => {
+            // Check if already loaded
+            if ((window as any).Razorpay) {
+                resolve(true);
+                return;
+            }
             const script = document.createElement('script');
             script.src = 'https://checkout.razorpay.com/v1/checkout.js';
             script.onload = () => resolve(true);
@@ -47,12 +54,13 @@ export default function PaymentPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsProcessing(true);
+        setPaymentError('');
 
         try {
             const res = await loadRazorpay();
 
             if (!res) {
-                alert('Razorpay SDK failed to load. Are you online?');
+                setPaymentError('Razorpay SDK failed to load. Please check your internet connection.');
                 setIsProcessing(false);
                 return;
             }
@@ -63,7 +71,7 @@ export default function PaymentPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: finalTotal,
-                    currency: currencyCode, // Dynamically use the store's currency
+                    currency: currencyCode,
                     receipt: `receipt_${Date.now()}`,
                     customer: {
                         email: checkoutData.email,
@@ -76,14 +84,15 @@ export default function PaymentPage() {
 
             const orderData = await orderRes.json();
 
-            if (orderData.error) {
-                alert('Internal Server Error: Could not create payment order.');
+            if (!orderRes.ok || orderData.error) {
+                console.error('Order creation failed:', orderData);
+                setPaymentError(orderData.error || 'Could not create payment order. Please try again.');
                 setIsProcessing(false);
                 return;
             }
 
             const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Key ID from environment
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: 'Low Religion',
@@ -96,35 +105,63 @@ export default function PaymentPage() {
                 },
                 theme: { color: '#000000' },
                 handler: async function (response: any) {
-                    // Success callback
+                    try {
+                        // Step 1: Verify payment signature on server
+                        const verifyRes = await fetch('/api/checkout/razorpay', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                            }),
+                        });
 
-                    // CRM: Record Order
-                    await createOrderRecord({
-                        customerId: orderData.customerId,
-                        razorpayOrderId: response.razorpay_order_id,
-                        razorpayPaymentId: response.razorpay_payment_id,
-                        amount: orderData.amount, // Record in base currency units (cents/paise)
-                        currency: orderData.currency,
-                        items: state.items,
-                        shippingAddress: {
-                            address: checkoutData.address,
-                            city: checkoutData.city,
-                            postalCode: checkoutData.postalCode,
-                            country: checkoutData.country,
-                        },
-                    });
+                        const verifyData = await verifyRes.json();
 
-                    trackEvent({
-                        eventType: 'purchase',
-                        payload: {
-                            total: finalTotal,
-                            orderId: response.razorpay_order_id,
-                            paymentId: response.razorpay_payment_id,
-                            items: state.items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity })),
-                            discountCode: discountCode
+                        if (!verifyData.verified) {
+                            setPaymentError('Payment verification failed. Please contact support.');
+                            setIsProcessing(false);
+                            return;
                         }
-                    });
-                    router.push('/checkout/success');
+
+                        // Step 2: Record order in CRM (only after verified)
+                        if (orderData.customerId) {
+                            await createOrderRecord({
+                                customerId: orderData.customerId,
+                                razorpayOrderId: response.razorpay_order_id,
+                                razorpayPaymentId: response.razorpay_payment_id,
+                                amount: orderData.amount,
+                                currency: orderData.currency,
+                                items: state.items,
+                                shippingAddress: {
+                                    address: checkoutData.address,
+                                    city: checkoutData.city,
+                                    postalCode: checkoutData.postalCode,
+                                    country: checkoutData.country,
+                                },
+                            });
+                        }
+
+                        // Step 3: Track analytics event
+                        trackEvent({
+                            eventType: 'purchase',
+                            payload: {
+                                total: finalTotal,
+                                orderId: response.razorpay_order_id,
+                                paymentId: response.razorpay_payment_id,
+                                items: state.items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity })),
+                                discountCode: discountCode
+                            }
+                        });
+
+                        // Step 4: Navigate to success
+                        router.push('/checkout/success');
+                    } catch (err) {
+                        console.error('Post-payment processing error:', err);
+                        // Payment was successful but CRM/analytics failed — still redirect
+                        router.push('/checkout/success');
+                    }
                 },
                 modal: {
                     ondismiss: function () {
@@ -134,11 +171,21 @@ export default function PaymentPage() {
             };
 
             const rzp = new (window as any).Razorpay(options);
+
+            rzp.on('payment.failed', function (response: any) {
+                console.error('Payment failed:', response.error);
+                setPaymentError(
+                    response.error?.description ||
+                    'Payment failed. Please try again or use a different payment method.'
+                );
+                setIsProcessing(false);
+            });
+
             rzp.open();
         } catch (error) {
             console.error('Payment Error:', error);
             setIsProcessing(false);
-            alert('An error occurred while initializing payment.');
+            setPaymentError('An error occurred while initializing payment. Please try again.');
         }
     };
 
@@ -202,7 +249,7 @@ export default function PaymentPage() {
                                     <div className="space-y-2">
                                         <h3 className="font-bold text-lg">Secure Gateway</h3>
                                         <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                                            After clicking "Pay Now", you will be redirected to Razorpay to complete your purchase securely.
+                                            After clicking &quot;Pay Now&quot;, you will be redirected to Razorpay to complete your purchase securely.
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-4 opacity-70 grayscale hover:grayscale-0 transition-all">
@@ -212,6 +259,23 @@ export default function PaymentPage() {
                                     </div>
                                 </div>
                             </section>
+
+                            {/* Payment Error Display */}
+                            {paymentError && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3"
+                                >
+                                    <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                                        <span className="text-red-600 text-xs font-bold">!</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-red-800 font-medium">Payment Error</p>
+                                        <p className="text-sm text-red-600 mt-1">{paymentError}</p>
+                                    </div>
+                                </motion.div>
+                            )}
 
                             <div className="space-y-6">
                                 <button
@@ -230,7 +294,7 @@ export default function PaymentPage() {
                                         </motion.div>
                                     ) : (
                                         <>
-                                            Pay {state.items[0]?.symbol || '$'} {finalTotal.toFixed(2)}
+                                            Pay {currencySymbol} {finalTotal.toFixed(2)}
                                             <ShieldCheck size={20} />
                                         </>
                                     )}
@@ -272,10 +336,10 @@ export default function PaymentPage() {
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                                                <p className="text-xs text-gray-500 uppercase tracking-widest">{item.symbol || '$'} {item.price}</p>
+                                                <p className="text-xs text-gray-500 uppercase tracking-widest">{currencySymbol} {item.price}</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm font-bold text-gray-900">{item.symbol || '$'} {((item.price || 0) * item.quantity).toFixed(2)}</p>
+                                        <p className="text-sm font-bold text-gray-900">{currencySymbol} {((item.price || 0) * item.quantity).toFixed(2)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -321,12 +385,12 @@ export default function PaymentPage() {
                             <div className="space-y-3 pt-6 border-t border-gray-200">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Subtotal</span>
-                                    <span className="font-bold text-gray-900">{state.items[0]?.symbol || '$'} {subtotal.toFixed(2)}</span>
+                                    <span className="font-bold text-gray-900">{currencySymbol} {subtotal.toFixed(2)}</span>
                                 </div>
                                 {discountAmount > 0 && (
                                     <div className="flex justify-between text-sm text-[#d8a4bc]">
                                         <span className="font-medium">Discount (15%)</span>
-                                        <span className="font-bold">-{state.items[0]?.symbol || '$'} {discount.toFixed(2)}</span>
+                                        <span className="font-bold">-{currencySymbol} {discount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-sm">
@@ -335,13 +399,13 @@ export default function PaymentPage() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Estimated taxes</span>
-                                    <span className="font-bold text-gray-900">{state.items[0]?.symbol || '$'} {taxes.toFixed(2)}</span>
+                                    <span className="font-bold text-gray-900">{currencySymbol} {taxes.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-xl font-bold pt-6 border-t border-gray-200 text-gray-900">
                                     <span>Total</span>
                                     <div className="text-right">
-                                        <span className="text-xs text-gray-400 mr-2 uppercase tracking-widest">USD</span>
-                                        <span>{state.items[0]?.symbol || '$'} {finalTotal.toFixed(2)}</span>
+                                        <span className="text-xs text-gray-400 mr-2 uppercase tracking-widest">{currencyCode}</span>
+                                        <span>{currencySymbol} {finalTotal.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
