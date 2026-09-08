@@ -34,6 +34,25 @@ export default function CookieConsent({ onComplete }: CookieConsentProps) {
         marketing: true,
     });
 
+    const applyConsent = (prefs: CookiePreferences) => {
+        if (typeof window.gtag === 'function') {
+            window.gtag('consent', 'update', {
+                'analytics_storage': prefs.analytics ? 'granted' : 'denied',
+                'ad_storage': prefs.marketing ? 'granted' : 'denied',
+                'ad_user_data': prefs.marketing ? 'granted' : 'denied',
+                'ad_personalization': prefs.marketing ? 'granted' : 'denied'
+            });
+
+            // Push datalayer events for GTM triggers if needed
+            if (prefs.analytics) {
+                window.dataLayer?.push({ event: 'consent_accepted_analytics' });
+            }
+            if (prefs.marketing) {
+                window.dataLayer?.push({ event: 'consent_accepted_advertising' });
+            }
+        }
+    };
+
     useEffect(() => {
         // Check if user has already consented
         const storedConsent = localStorage.getItem(COOKIE_STORAGE_KEY);
@@ -64,25 +83,6 @@ export default function CookieConsent({ onComplete }: CookieConsentProps) {
             document.body.style.overflow = '';
         };
     }, []);
-
-    const applyConsent = (prefs: CookiePreferences) => {
-        if (typeof window.gtag === 'function') {
-            window.gtag('consent', 'update', {
-                'analytics_storage': prefs.analytics ? 'granted' : 'denied',
-                'ad_storage': prefs.marketing ? 'granted' : 'denied',
-                'ad_user_data': prefs.marketing ? 'granted' : 'denied',
-                'ad_personalization': prefs.marketing ? 'granted' : 'denied'
-            });
-
-            // Push datalayer events for GTM triggers if needed
-            if (prefs.analytics) {
-                window.dataLayer?.push({ event: 'consent_accepted_analytics' });
-            }
-            if (prefs.marketing) {
-                window.dataLayer?.push({ event: 'consent_accepted_advertising' });
-            }
-        }
-    };
 
     const handleAcceptAll = () => {
         const allGiven = {
@@ -128,7 +128,7 @@ export default function CookieConsent({ onComplete }: CookieConsentProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 touch-none">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-17 touch-none">
             <div className="w-full max-w-md bg-white border border-gray-200 shadow-2xl overflow-hidden font-sans">
 
                 {/* Header */}
@@ -177,7 +177,7 @@ export default function CookieConsent({ onComplete }: CookieConsentProps) {
                         </div>
 
                         <div className="pt-2 text-xs text-gray-400">
-                            <Link href="/privacy-policy" className="underline hover:text-black">Privacy Policy</Link> • <Link href="/cookie-policy" className="underline hover:text-black">Cookie Policy</Link>
+                            <Link href="/help/privacy" className="underline hover:text-black">Privacy Policy</Link> • <Link href="/help/privacy" className="underline hover:text-black">Cookie Policy</Link>
                         </div>
                     </div>
                 )}

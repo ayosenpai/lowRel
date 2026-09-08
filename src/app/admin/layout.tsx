@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
     Package,
@@ -22,6 +22,7 @@ import './admin.css';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
     const [user, setUser] = useState<any>(null);
@@ -131,7 +132,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </nav>
 
                 <div className="p-6 border-t border-[#1E293B]">
-                    <button className="flex items-center gap-4 px-4 py-3.5 w-full text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-all rounded-lg group text-[10px] font-black uppercase tracking-widest">
+                    <button
+                        onClick={async () => {
+                            await supabase.auth.signOut();
+                            router.push('/');
+                        }}
+                        className="flex items-center gap-4 px-4 py-3.5 w-full text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-all rounded-lg group text-[10px] font-black uppercase tracking-widest"
+                    >
                         <LogOut className="w-5 h-5 flex-shrink-0" />
                         {isSidebarOpen && <span>Sign Out</span>}
                     </button>

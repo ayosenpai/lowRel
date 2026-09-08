@@ -69,9 +69,30 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// PUT: Verify Razorpay payment signature
-export async function PUT(request: NextRequest) {
+// GET: Check whether a given order has been paid (used for session recovery
+// after mobile redirects back to the checkout page)
+export async function GET(request: NextRequest) {
     try {
+        const orderId = request.nextUrl.searchParams.get('order_id');
+        if (!orderId) {
+            return NextResponse.json({ error: 'Missing order_id' }, { status: 400 });
+        }
+
+        const order = await razorpay.orders.fetch(orderId);
+        const paid = order.amount_paid > 0;
+
+        return NextResponse.json({ orderId, paid });
+    } catch (error: any) {
+        console.error('Razorpay order status check error:', error?.error || error?.message || error);
+        return NextResponse.json(
+            { error: 'Could not fetch order status' },
+            { status: 500 }
+        );
+    }
+}
+
+// PUT: Verify Razorpay payment signature
+export async function PUT(request: NextRequest) {    try {
         const body = await request.json();
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 

@@ -1,12 +1,13 @@
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import SupabaseImage from '@/components/SupabaseImage';
 import Header from '@/components/sections/header';
 import Footer from '@/components/sections/footer';
 import { getProducts } from '@/lib/actions/products';
 import { notFound } from 'next/navigation';
+
+const ITEMS_PER_PAGE = 24;
 
 export default async function CollectionPage({ params, searchParams }: {
     params: Promise<{ collection: string }>,
@@ -19,32 +20,29 @@ export default async function CollectionPage({ params, searchParams }: {
     let category: string | undefined = undefined;
     let isNew: boolean | undefined = undefined;
     let isSale: boolean | undefined = undefined;
-    let search: string | undefined = sParams.q as string | undefined;
+    const search = sParams.q as string | undefined;
 
-    if (collection === 'tops-tees') category = 'Tops';
+    if (collection === 'tops-tees' || collection === 'tops') category = 'Tops';
     else if (collection === 'bottoms') category = 'Bottoms';
     else if (collection === 'accessories') category = 'Accessories';
     else if (collection === 'outerwear') category = 'Outerwear';
+    else if (collection === 'sweatshirts-hoodies') category = 'Tops';
     else if (collection === 'new-in') isNew = true;
     else if (collection === 'sale') isSale = true;
     else if (collection !== 'all') {
-        // Handle custom sweatshirts logic or 404
-        if (collection === 'sweatshirts-hoodies') {
-            category = 'Tops'; // We might need more granular filtering in the action later
-        } else {
-            // return notFound(); // Uncomment if you want strict 404
-        }
+        notFound();
     }
 
     const title = getCollectionTitle(collection);
+    const currentPage = Math.max(1, Number(sParams.page) || 1);
 
-    // Fetch products using our optimized server action
-    // Note: In a real scenario, we'd add more filters to the action for isNew/isSale
     const { products: displayProducts, metadata } = await getProducts({
         category,
         search,
-        page: Number(sParams.page || 1),
-        limit: 24,
+        isNew,
+        isSale,
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
         sort: (sParams.sort as any) || 'newest'
     });
 
@@ -98,7 +96,7 @@ export default async function CollectionPage({ params, searchParams }: {
                                         <h3 className="text-xs md:text-sm font-bold uppercase tracking-wide truncate pr-4">{product.name}</h3>
                                         <div className="flex items-center gap-2">
                                             <span className={`text-xs md:text-sm font-bold ${product.isSale ? 'text-[#ff69b4]' : 'text-black'}`}>
-                                                {product.symbol} {product.price.toFixed(2)}
+                                                {product.symbol} {product.price?.toFixed(2)}
                                             </span>
                                             {product.compareAtPrice && (
                                                 <span className="text-xs text-gray-400 line-through">
@@ -111,11 +109,14 @@ export default async function CollectionPage({ params, searchParams }: {
                             ))}
                         </div>
 
-                        {/* Pagination controls can be added here */}
+                        {/* Pagination */}
                         {metadata.totalPages > 1 && (
-                            <div className="mt-20 flex justify-center gap-4">
-                                {/* Simple pagination links would go here */}
-                            </div>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={metadata.totalPages}
+                                baseHref={`/collections/${collection}`}
+                                searchParams={sParams}
+                            />
                         )}
                     </>
                 )}
@@ -131,6 +132,7 @@ const getCollectionTitle = (collection: string) => {
     switch (collection) {
         case 'new-in': return 'New Arrivals';
         case 'sale': return 'Sale';
+        case 'tops': return 'Tops & Tees';
         case 'tops-tees': return 'Tops & Tees';
         case 'bottoms': return 'Bottoms';
         case 'sweatshirts-hoodies': return 'Sweatshirts & Hoodies';
@@ -140,3 +142,60 @@ const getCollectionTitle = (collection: string) => {
         default: return collection.replace(/-/g, ' ');
     }
 };
+
+function Pagination({ currentPage, totalPages, baseHref, searchParams }: {
+    currentPage: number;
+    totalPages: number;
+    baseHref: string;
+    searchParams: { [key: string]: string | string[] | undefined };
+}) {
+    const pageHref = (page: number) => {
+        const params = new URLSearchParams();
+        if (typeof searchParams.q === 'string') params.set('q', searchParams.q);
+        if (typeof searchParams.sort === 'string') params.set('sort', searchParams.sort);
+        if (page > 1) params.set('page', String(page));
+        const qs = params.toString();
+        return qs ? `${baseHref}?${qs}` : baseHref;
+    };
+
+    const pages: (number | '...')[] = [];
+    for (let p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
+            pages.push(p);
+        } else if (pages[pages.length - 1] !== '...') {
+            pages.push('...');
+        }
+    }
+
+    return (
+        <nav className="mt-20 flex items-center justify-center gap-2" aria-label="Pagination">
+            {currentPage > 1 && (
+                <Link href={pageHref(currentPage - 1)} className="px-4 py-2 border border-black text-[11px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
+                    Prev
+                </Link>
+            )}
+            {pages.map((p, i) =>
+                p === '...' ? (
+                    <span key={`ellipsis-${i}`} className="px-2 text-gray-400">…</span>
+                ) : (
+                    <Link
+                        key={p}
+                        href={pageHref(p)}
+                        aria-current={p === currentPage ? 'page' : undefined}
+                        className={`w-10 h-10 flex items-center justify-center text-[11px] font-bold uppercase transition-colors ${p === currentPage
+                            ? 'bg-black text-white'
+                            : 'border border-gray-200 hover:border-black'
+                            }`}
+                    >
+                        {p}
+                    </Link>
+                )
+            )}
+            {currentPage < totalPages && (
+                <Link href={pageHref(currentPage + 1)} className="px-4 py-2 border border-black text-[11px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
+                    Next
+                </Link>
+            )}
+        </nav>
+    );
+}

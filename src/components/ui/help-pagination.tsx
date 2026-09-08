@@ -21,7 +21,7 @@ export default function HelpPagination() {
             {prevArticle ? (
                 <Link
                     href={prevArticle.path}
-                    className="w-full md:flex-1 group p-8 md:p-10 border border-gray-100 rounded-[48px] hover:border-black hover:bg-gray-50 flex flex-col items-start transition-all"
+                    className="w-full md:flex-1 group p-8 md:p-10 border border-gray-100 rounded-none hover:border-black hover:bg-gray-50 flex flex-col items-start transition-all"
                 >
                     <div className="flex items-center gap-3 text-gray-400 mb-4 group-hover:-translate-x-2 transition-transform">
                         <ArrowLeft size={16} />
@@ -34,7 +34,7 @@ export default function HelpPagination() {
             {nextArticle ? (
                 <Link
                     href={nextArticle.path}
-                    className="w-full md:flex-1 group p-8 md:p-10 border border-black bg-black text-white rounded-[48px] hover:bg-[#d8a4bc] hover:text-black hover:border-[#d8a4bc] flex flex-col items-end transition-all shadow-2xl"
+                    className="w-full md:flex-1 group p-8 md:p-10 border border-black bg-black text-white rounded-none hover:bg-[#d8a4bc] hover:text-black hover:border-[#d8a4bc] flex flex-col items-end transition-all shadow-2xl"
                 >
                     <div className="flex items-center gap-3 text-gray-400 mb-4 group-hover:translate-x-2 transition-transform group-hover:text-black">
                         <span className="text-[10px] font-black uppercase tracking-widest">Next Topic</span>

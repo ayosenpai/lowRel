@@ -10,9 +10,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { login } from '@/app/login/actions';
 import SupabaseImage from '@/components/SupabaseImage';
+import { useRouter } from 'next/navigation';
 
 export default function WishlistPage() {
     const { state, dispatch } = useWishlist();
+    const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
@@ -38,7 +40,7 @@ export default function WishlistPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-[9999px] animate-spin" />
             </div>
         );
     }
@@ -142,7 +144,7 @@ export default function WishlistPage() {
                                 >
                                     <button
                                         onClick={() => dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: product.id })}
-                                        className="absolute top-2 right-2 z-10 p-2 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black hover:text-white"
+                                        className="absolute top-2 right-2 z-10 p-2 bg-white rounded-none shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black hover:text-white"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -172,7 +174,7 @@ export default function WishlistPage() {
                                     </Link>
 
                                     <button
-                                        onClick={() => window.location.href = `/products/${product.handle}`}
+                                        onClick={() => router.push(`/products/${product.handle}`)}
                                         className="w-full mt-4 border border-black py-2 text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2"
                                     >
                                         <ShoppingBag className="w-3 h-3" />
@@ -183,8 +185,8 @@ export default function WishlistPage() {
                         </AnimatePresence>
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-gray-50 rounded-lg">
-                        <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                    <div className="text-center py-20 bg-gray-50 rounded-none">
+                        <div className="bg-white w-20 h-20 rounded-none flex items-center justify-center mx-auto mb-6 shadow-sm">
                             <ShoppingBag className="w-8 h-8 text-gray-300" />
                         </div>
                         <p className="text-gray-500 mb-8 max-w-md mx-auto uppercase text-xs tracking-widest font-bold">

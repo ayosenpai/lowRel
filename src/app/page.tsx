@@ -3,7 +3,7 @@ import HeroSale from "@/components/sections/hero-sale";
 import CategoryGrid from "@/components/sections/category-grid";
 import BraceletCarousel from "@/components/sections/bracelet-carousel";
 import ProductShowcase from "@/components/sections/product-showcase";
-import MovingCarousel from "@/components/sections/new-arrivals-banner";
+import NewArrivalsBanner from "@/components/sections/new-arrivals-banner";
 import Footer from "@/components/sections/footer";
 import { getProducts } from "@/lib/actions/products";
 
@@ -23,7 +23,7 @@ export default async function Home() {
         <CategoryGrid />
         <BraceletCarousel products={braceletProducts} />
         <ProductShowcase products={products} />
-        <MovingCarousel products={products} />
+        <NewArrivalsBanner products={products} />
       </div>
 
       <Footer />

@@ -98,7 +98,7 @@ export async function createOrderRecord(orderData: {
                     productId: item.id,
                     productName: item.name,
                     quantity: item.quantity,
-                    price: Math.round(item.price * 100), // Ensure cents
+                    price: Math.round((item.price ?? 0) * 100), // Ensure smallest unit (paise/cents)
                     variantName: item.size || 'Standard',
                 }))
             );

@@ -29,7 +29,12 @@ export default function CategoryGridClient({ categoryData }: { categoryData: any
               />
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
               <div className="absolute bottom-0 left-0 p-4 md:p-6 lg:p-8 w-full">
-                <span className="text-[#ff69b4] text-[16px] md:text-[20px] font-bold uppercase tracking-tight border-b-2 border-[#ff69b4] leading-none inline-block pb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                <span
+                  className={`text-[16px] md:text-[20px] font-bold uppercase tracking-tight leading-none inline-block pb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] border-b-2 ${category.title === "NEW drops"
+                    ? "new-drops-text border-pink-500"
+                    : "text-[#ff69b4] border-[#ff69b4]"
+                    }`}
+                >
                   {category.title}
                 </span>
               </div>

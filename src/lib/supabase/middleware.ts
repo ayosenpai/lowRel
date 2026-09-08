@@ -43,7 +43,19 @@ export async function updateSession(request: NextRequest) {
     // If this is not done, you may be causing the browser and server to go out
     // of sync and terminate the user's session prematurely!
 
-    await supabase.auth.getUser()
+    // Only hit the auth endpoint when a Supabase session cookie actually exists.
+    // Anonymous visitors otherwise trigger a failing edge fetch on every request.
+    const hasSessionCookie = request.cookies.getAll().some((cookie) =>
+        cookie.name.startsWith('sb-')
+    )
+
+    if (hasSessionCookie) {
+        try {
+            await supabase.auth.getUser()
+        } catch (error) {
+            console.error('Supabase auth check failed:', error)
+        }
+    }
 
     return supabaseResponse
 }

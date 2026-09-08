@@ -69,24 +69,30 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
   }, [isMenuOpen, state.isOpen]);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setIsScrolled(currentScrollY > 10);
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        setIsScrolled(currentScrollY > 10);
 
-      // Hide/Show logic - simpler approach
-      const isAtTop = currentScrollY < 100;
-      const threshold = isAtTop ? 30 : 0;
+        // Hide/Show logic - simpler approach
+        const isAtTop = currentScrollY < 100;
+        const threshold = isAtTop ? 30 : 0;
 
-      if (currentScrollY > lastScrollY.current + threshold && currentScrollY > 50) {
-        setIsVisible(false);
-      } else if (currentScrollY < lastScrollY.current) {
-        setIsVisible(true);
-      }
+        if (currentScrollY > lastScrollY.current + threshold && currentScrollY > 50) {
+          setIsVisible(false);
+        } else if (currentScrollY < lastScrollY.current) {
+          setIsVisible(true);
+        }
 
-      lastScrollY.current = currentScrollY;
+        lastScrollY.current = currentScrollY;
+        ticking = false;
+      });
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -113,7 +119,8 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
         <div
           style={{
             transform: isVisible ? 'translateY(0)' : 'translateY(-100%)',
-            transition: 'transform 0.3s ease-out'
+            transition: 'transform 0.3s ease-out',
+            willChange: 'transform'
           }}
           className={`w-full bg-[#d8a4bc] h-[30px] flex items-center justify-center absolute top-0 z-50 ${isTransparent ? '' : 'border-b border-black'}`}
         >
@@ -126,7 +133,8 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
         <nav
           style={{
             transform: `translateY(${isVisible ? 30 : -100}px)`,
-            transition: 'transform 0.3s ease-out, background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s'
+            transition: 'transform 0.3s ease-out, background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s',
+            willChange: 'transform'
           }}
           className={`w-full h-[64px] flex items-center justify-between px-5 xl:px-10 ${isTransparent ? '' : 'border-b'} absolute top-0 ${navBackgroundClass}`}
         >
@@ -163,7 +171,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
             {[
               { icon: navAssets.search, alt: "Search", action: () => setIsSearchOpen(true) },
               { icon: navAssets.wishlist, alt: "Wishlist", href: "/pages/wishlist" },
-              { icon: navAssets.bag, alt: "Bag", href: "/cart", count: true }
+              { icon: navAssets.bag, alt: "Bag", count: true }
             ].map((item, i) => (
               <div key={i} className="hover:scale-110 active:scale-95 transition-transform">
                 {item.alt === 'Bag' ? (
@@ -180,7 +188,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
                       strokeWidth={1.5}
                     />
                     {state.items.reduce((sum, item) => sum + item.quantity, 0) > 0 && (
-                      <span className={`absolute -top-1 -right-1 text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold ${isTransparent ? 'bg-black text-white' : 'bg-white text-black'}`}>
+                      <span className={`absolute -top-1 -right-1 text-[9px] w-4 h-4 flex items-center justify-center rounded-none font-bold ${isTransparent ? 'bg-black text-white' : 'bg-white text-black'}`}>
                         {state.items.reduce((sum, item) => sum + item.quantity, 0)}
                       </span>
                     )}

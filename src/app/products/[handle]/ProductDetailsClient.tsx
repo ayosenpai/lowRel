@@ -165,7 +165,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                                 onDragEnd={(event, { offset, velocity }) => {
                                     const swipe = Math.abs(offset.x);
                                     if (swipe > 50) {
-                                        offset.x > 0 ? prevImage() : nextImage();
+                                        if (offset.x > 0) {
+                                            prevImage();
+                                        } else {
+                                            nextImage();
+                                        }
                                     }
                                 }}
                             >
@@ -183,7 +187,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
                         <button
                             onClick={handleToggleWishlist}
-                            className="absolute top-4 right-4 z-20 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all group/heart hover:scale-110 active:scale-90"
+                            className="absolute top-4 right-4 z-20 p-2.5 bg-white/90 backdrop-blur-sm rounded-none shadow-md hover:bg-white transition-all group/heart hover:scale-110 active:scale-90"
                         >
                             <Heart
                                 className={`w-5 h-5 transition-colors ${isFavorited
@@ -262,7 +266,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                                         className="flex items-center justify-center gap-2"
                                     >
                                         <span
-                                            className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"
+                                            className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-[9999px] animate-spin"
                                         />
                                         Adding...
                                     </span>
@@ -289,7 +293,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                             <ul className="mt-4 space-y-2">
                                 {product.details?.map((detail: string, i: number) => (
                                     <li key={i} className="text-sm text-black font-medium flex items-start gap-2">
-                                        <span className="mt-2 w-1 h-1 bg-black rounded-full shrink-0" />
+                                        <span className="mt-2 w-1 h-1 bg-black rounded-none shrink-0" />
                                         {detail}
                                     </li>
                                 ))}

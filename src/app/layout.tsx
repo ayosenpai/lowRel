@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Archivo } from "next/font/google";
 import "./globals.css";
-import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
 import { CartProvider } from "@/lib/cart-context";
@@ -19,6 +18,13 @@ const inter = Inter({
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-inter',
+});
+
+const archivo = Archivo({
+  subsets: ['latin'],
+  weight: ['900'],
+  display: 'swap',
+  variable: '--font-archivo',
 });
 
 export const metadata: Metadata = {
@@ -77,7 +83,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
+    <html lang="en" className={`${inter.variable} ${archivo.variable}`} data-scroll-behavior="smooth">
       <head>
 
 
@@ -106,9 +112,11 @@ export default function RootLayout({
         </Script>
 
         <link rel="preconnect" href="https://slelguoygbfzlpylpxfs.supabase.co" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://ojmqttdrbundpodfusoe.supabase.co" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://slelguoygbfzlpylpxfs.supabase.co" />
+        <link rel="dns-prefetch" href="https://ojmqttdrbundpodfusoe.supabase.co" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
 
       </head>
@@ -121,7 +129,7 @@ export default function RootLayout({
               <a href="#main-content" className="skip-to-content">
                 Skip to main content
               </a>
-              <ErrorReporter />
+              {process.env.NODE_ENV === 'development' && <ErrorReporter />}
               <div id="main-content">
                 <Suspense fallback={null}>
                   <PageTracker />
@@ -129,7 +137,6 @@ export default function RootLayout({
                 {children}
               </div>
               <CartSidebar />
-              {/* <VisualEditsMessenger /> */}
               <ModalSequenceManager />
               <Toaster />
             </CheckoutProvider>

@@ -6,8 +6,11 @@ interface CheckoutData {
     email: string;
     firstName: string;
     lastName: string;
+    company?: string;
+    apartment?: string;
     address: string;
     city: string;
+    state?: string;
     postalCode: string;
     country: string;
     phone: string;
@@ -26,10 +29,13 @@ const defaultData: CheckoutData = {
     email: '',
     firstName: '',
     lastName: '',
+    company: '',
+    apartment: '',
     address: '',
     city: '',
+    state: '',
     postalCode: '',
-    country: 'United States',
+    country: 'India',
     phone: '',
 };
 
@@ -46,8 +52,14 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
 
     const applyDiscount = (code: string) => {
         const normalizedCode = code.toUpperCase().trim();
-        if (normalizedCode === 'FAMILY15') {
-            setDiscountCode('FAMILY15');
+        if (!normalizedCode) {
+            // Empty code clears the applied discount
+            setDiscountCode('');
+            setDiscountAmount(0);
+            return true;
+        }
+        if (normalizedCode === 'MATTERBABY') {
+            setDiscountCode('MATTERBABY');
             setDiscountAmount(0.15); // 15% discount
             return true;
         }

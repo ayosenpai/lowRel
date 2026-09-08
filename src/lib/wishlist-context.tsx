@@ -3,7 +3,7 @@
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { Product } from '@/lib/types';
 
-export interface WishlistItem extends Product { }
+export type WishlistItem = Product;
 
 interface WishlistState {
     items: WishlistItem[];

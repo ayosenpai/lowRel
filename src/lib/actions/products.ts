@@ -5,6 +5,7 @@ import { products } from '@/db/schema';
 import { eq, and, ilike, sql, desc, asc } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { unstable_cache } from 'next/cache';
+import type { Product } from '@/lib/types';
 
 export interface GetProductsOptions {
     category?: string;
@@ -13,6 +14,8 @@ export interface GetProductsOptions {
     limit?: number;
     sort?: 'price_asc' | 'price_desc' | 'newest';
     region?: 'IN' | 'GLOBAL';
+    isNew?: boolean;
+    isSale?: boolean;
 }
 
 export const getProducts = async (options: GetProductsOptions = {}) => {
@@ -37,14 +40,16 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
         page = 1,
         limit = 12,
         sort = 'newest',
-        region = 'GLOBAL'
+        region = 'GLOBAL',
+        isNew,
+        isSale
     } = options;
 
     const offset = (page - 1) * limit;
     const isIndia = region === 'IN';
 
     let whereClause = undefined;
-    let conditions = [];
+    const conditions: any[] = [];
 
     if (category && category !== 'All') {
         conditions.push(eq(products.category, category));
@@ -52,6 +57,14 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
 
     if (search) {
         conditions.push(ilike(products.name, `%${search}%`));
+    }
+
+    if (isNew !== undefined) {
+        conditions.push(eq(products.isNew, isNew));
+    }
+
+    if (isSale !== undefined) {
+        conditions.push(eq(products.isSale, isSale));
     }
 
     if (conditions.length > 0) {
@@ -79,8 +92,22 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
     const total = Number(totalResult[0]?.count || 0);
 
     return {
-        products: data.map(p => ({
-            ...p,
+        products: data.map<Product>(p => ({
+            id: p.id,
+            handle: p.handle,
+            name: p.name,
+            priceUSD: p.priceUSD,
+            priceINR: p.priceINR,
+            compareAtPriceUSD: p.compareAtPriceUSD,
+            compareAtPriceINR: p.compareAtPriceINR,
+            images: p.images ?? [],
+            description: p.description ?? '',
+            details: p.details ?? [],
+            fit: p.fit ?? undefined,
+            modelInfo: p.modelInfo ?? undefined,
+            category: p.category ?? '',
+            isNew: p.isNew ?? false,
+            isSale: p.isSale ?? false,
             // Adaptive price based on region
             price: isIndia ? p.priceINR / 100 : p.priceUSD / 100,
             compareAtPrice: isIndia

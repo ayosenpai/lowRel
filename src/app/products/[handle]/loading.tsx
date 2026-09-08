@@ -20,17 +20,17 @@ export default function ProductLoading() {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="h-4 w-48 bg-gray-100 animate-pulse rounded" />
+                            <div className="h-4 w-48 bg-gray-100 animate-pulse" />
                             <div className="grid grid-cols-4 gap-2">
                                 {[...Array(4)].map((_, i) => (
-                                    <div key={i} className="aspect-square bg-gray-50 border border-gray-100 animate-pulse rounded-lg" />
+                                    <div key={i} className="aspect-square bg-gray-50 border border-gray-100 animate-pulse rounded-none" />
                                 ))}
                             </div>
                         </div>
 
                         <div className="space-y-4 pt-10 border-t border-gray-100">
-                            <div className="h-14 w-full bg-black animate-pulse rounded-xl" />
-                            <div className="h-14 w-full bg-white border border-gray-200 animate-pulse rounded-xl" />
+                            <div className="h-14 w-full bg-black animate-pulse rounded-none" />
+                            <div className="h-14 w-full bg-white border border-gray-200 animate-pulse rounded-none" />
                         </div>
 
                         <div className="space-y-6 pt-10 border-t border-gray-100">

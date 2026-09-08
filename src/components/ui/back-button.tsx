@@ -50,10 +50,8 @@ export default function BackButton({ fallbackHref = '/', text = 'Back', classNam
         smartFallback = '/help';
       } else if (pathname === '/help') {
         smartFallback = '/';
-      } else if (pathname === '/cart') {
+      } else if (pathname.startsWith('/checkout')) {
         smartFallback = '/collections/all';
-      } else if (pathname === '/checkout') {
-        smartFallback = '/cart';
       }
       setReferrer(smartFallback);
     }
@@ -83,7 +81,6 @@ export default function BackButton({ fallbackHref = '/', text = 'Back', classNam
     if (referrer === '/' || referrer === '') return '← Back to Home';
     if (referrer === '/help') return '← Back to Help';
     if (referrer === '/collections/all') return '← Back to Shop';
-    if (referrer === '/cart') return '← Back to Cart';
     if (referrer && referrer.startsWith('/products/')) return '← Back to Product';
     return text;
   };

@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/db';
-import { userEvents, products, customers } from '@/db/schema';
-import { count, sum, desc, eq, sql, and } from 'drizzle-orm';
+import { userEvents, products, customers, orders } from '@/db/schema';
+import { count, sum, desc, asc, eq, sql, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function getAdminStats() {
@@ -319,6 +319,270 @@ export async function getMarketingSegments() {
         };
     } catch (error) {
         console.error('Failed to fetch marketing segments:', error);
+        return null;
+    }
+}
+
+export interface AdminDashboardData {
+    range: number;
+    currencySymbol: string;
+    period: {
+        revenue: number;
+        orders: number;
+        visitors: number;
+        cartAdds: number;
+        checkouts: number;
+        purchases: number;
+        aov: number;
+        conversionRate: number;
+    };
+    previous: {
+        revenue: number;
+        orders: number;
+        visitors: number;
+        purchases: number;
+        aov: number;
+        conversionRate: number;
+    };
+    series: { date: string; revenue: number; visitors: number; orders: number }[];
+    funnel: { name: string; count: number; pct: number }[];
+    topProducts: { id: string; name: string; count: number; revenue: number }[];
+    recentOrders: {
+        id: string;
+        total: number;
+        status: string;
+        customer: string;
+        createdAt: string;
+    }[];
+    insights: {
+        kind: 'positive' | 'warning' | 'info' | 'danger';
+        title: string;
+        detail: string;
+    }[];
+    hourlyActivity: { hour: number; count: number }[];
+    peakDay: string | null;
+    topChannels: { name: string; value: number }[];
+}
+
+export async function getAdminDashboard(rangeDays = 7): Promise<AdminDashboardData | null> {
+    try {
+        const now = new Date();
+        const start = new Date(now);
+        start.setDate(start.getDate() - rangeDays);
+        const prevStart = new Date(start);
+        prevStart.setDate(prevStart.getDate() - rangeDays);
+
+        const allEvents = await db.select().from(userEvents);
+        const periodEvents = allEvents.filter(e => e.timestamp >= start);
+        const prevEvents = allEvents.filter(e => e.timestamp >= prevStart && e.timestamp < start);
+
+        const countBy = (events: typeof allEvents, type: string) => events.filter(e => e.eventType === type).length;
+        const sumRevenue = (events: typeof allEvents) => events
+            .filter(e => e.eventType === 'purchase')
+            .reduce((acc, e) => acc + ((e.payload as any)?.total || 0), 0);
+
+        const purchases = periodEvents.filter(e => e.eventType === 'purchase');
+        const prevPurchases = prevEvents.filter(e => e.eventType === 'purchase');
+
+        const revenue = sumRevenue(periodEvents);
+        const prevRevenue = sumRevenue(prevEvents);
+        const visitors = new Set(periodEvents.map(e => e.sessionId)).size;
+        const prevVisitors = new Set(prevEvents.map(e => e.sessionId)).size;
+        const cartAdds = countBy(periodEvents, 'add_to_cart');
+        const checkouts = countBy(periodEvents, 'begin_checkout');
+        const ordersCount = purchases.length;
+        const prevOrders = prevPurchases.length;
+        const aov = ordersCount ? revenue / ordersCount : 0;
+        const prevAov = prevOrders ? prevRevenue / prevOrders : 0;
+        const conversionRate = visitors ? (ordersCount / visitors) * 100 : 0;
+        const prevConversionRate = prevVisitors ? (prevOrders / prevVisitors) * 100 : 0;
+
+        const series = [...Array(rangeDays)].map((_, i) => {
+            const d = new Date(start);
+            d.setDate(d.getDate() + i);
+            const key = d.toISOString().split('T')[0];
+            const dayEvents = periodEvents.filter(e => e.timestamp.toISOString().split('T')[0] === key);
+            const dayPurchases = dayEvents.filter(e => e.eventType === 'purchase');
+            const dayRev = dayPurchases.reduce((acc, e) => acc + ((e.payload as any)?.total || 0), 0);
+            return {
+                date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                revenue: Math.round(dayRev * 100) / 100,
+                visitors: new Set(dayEvents.map(e => e.sessionId)).size,
+                orders: dayPurchases.length,
+            };
+        });
+
+        const funnelSteps = ['page_view', 'view_product', 'add_to_cart', 'begin_checkout', 'purchase'];
+        const funnel = funnelSteps.map((key, i) => {
+            const count = countBy(periodEvents, key);
+            const prev = i === 0 ? 100 : countBy(periodEvents, funnelSteps[i - 1]);
+            return {
+                name: key.replace(/_/g, ' '),
+                count,
+                pct: i === 0 ? 100 : (prev ? (count / prev) * 100 : 0),
+            };
+        });
+
+        const productSales: Record<string, { id: string; name: string; count: number; revenue: number }> = {};
+        purchases.forEach(e => {
+            const items = (e.payload as any)?.items;
+            if (!Array.isArray(items)) return;
+            items.forEach((item: any) => {
+                if (!item?.id) return;
+                const rec = productSales[item.id] || (productSales[item.id] = { id: item.id, name: item.name || 'Unknown', count: 0, revenue: 0 });
+                rec.count += item.quantity || 1;
+                rec.revenue += (item.price || 0) * (item.quantity || 1);
+            });
+        });
+        const topProducts = Object.values(productSales)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+
+        const recentOrdersRaw = await db.select({
+            id: orders.id,
+            totalAmount: orders.totalAmount,
+            status: orders.status,
+            firstName: customers.firstName,
+            lastName: customers.lastName,
+            email: customers.email,
+            createdAt: orders.createdAt,
+        }).from(orders)
+            .leftJoin(customers, eq(orders.customerId, customers.id))
+            .orderBy(desc(orders.createdAt))
+            .limit(8);
+
+        const recentOrders = recentOrdersRaw.map(o => ({
+            id: o.id,
+            total: (o.totalAmount || 0) / 100,
+            status: o.status || 'pending',
+            customer: [o.firstName, o.lastName].filter(Boolean).join(' ') || o.email || '—',
+            createdAt: o.createdAt ? o.createdAt.toISOString() : new Date().toISOString(),
+        }));
+
+        const lastPurchase = purchases[purchases.length - 1];
+        const currencyCode = (lastPurchase?.payload as any)?.currency === 'INR' ? 'INR' : 'USD';
+        const currencySymbol = currencyCode === 'INR' ? '₹' : '$';
+
+        const hourlyActivity = [...Array(24)].map((_, h) => ({
+            hour: h,
+            count: periodEvents.filter(e => e.timestamp.getHours() === h).length,
+        }));
+
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayRevenue: Record<string, number> = {};
+        periodEvents
+            .filter(e => e.eventType === 'purchase')
+            .forEach(e => {
+                const day = dayNames[e.timestamp.getDay()];
+                dayRevenue[day] = (dayRevenue[day] || 0) + ((e.payload as any)?.total || 0);
+            });
+        const peakDay = Object.entries(dayRevenue).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+        const referrerCounts: Record<string, number> = {};
+        periodEvents
+            .filter(e => e.eventType === 'page_view')
+            .forEach(e => {
+                const ref = (e.payload as any)?.referrer;
+                let channel = 'Direct / Unknown';
+                if (ref) {
+                    try {
+                        const url = new URL(ref);
+                        if (url.hostname.includes('google')) channel = 'Google Search';
+                        else if (url.hostname.includes('instagram')) channel = 'Instagram';
+                        else if (url.hostname.includes('facebook')) channel = 'Facebook';
+                        else if (url.hostname.includes('t.co') || url.hostname.includes('twitter')) channel = 'Twitter / X';
+                        else if (url.hostname.includes('pinterest')) channel = 'Pinterest';
+                        else if (url.hostname.includes('tiktok')) channel = 'TikTok';
+                        else channel = url.hostname;
+                    } catch {
+                        channel = 'Other';
+                    }
+                }
+                referrerCounts[channel] = (referrerCounts[channel] || 0) + 1;
+            });
+        const topChannels = Object.entries(referrerCounts)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5);
+
+        const insights: AdminDashboardData['insights'] = [];
+
+        const hourCounts: Record<number, number> = {};
+        periodEvents.forEach(e => {
+            const h = e.timestamp.getHours();
+            hourCounts[h] = (hourCounts[h] || 0) + 1;
+        });
+        const peakEntry = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
+        if (peakEntry) {
+            const h = Number(peakEntry[0]);
+            const label = `${h % 12 === 0 ? 12 : h % 12}:00 ${h < 12 ? 'AM' : 'PM'}`;
+            insights.push({
+                kind: 'info',
+                title: 'Peak engagement window',
+                detail: `Most activity lands around ${label}. Time launches, drops and email sends to this window to maximise reach.`,
+            });
+        }
+
+        if (topProducts.length) {
+            const best = topProducts[0];
+            insights.push({
+                kind: 'positive',
+                title: 'Top revenue driver',
+                detail: `“${best.name}” is your biggest seller this period (${currencySymbol}${best.revenue.toFixed(2)} across ${best.count} units). Keep it front and centre.`,
+            });
+        }
+
+        const checkoutSessions = new Set(periodEvents.filter(e => e.eventType === 'begin_checkout').map(e => e.sessionId));
+        const purchasedSessions = new Set(purchases.map(e => e.sessionId));
+        const abandoned = [...checkoutSessions].filter(sid => !purchasedSessions.has(sid)).length;
+        if (abandoned > 0) {
+            insights.push({
+                kind: 'danger',
+                title: 'Recoverable revenue',
+                detail: `${abandoned} session${abandoned === 1 ? '' : 's'} reached checkout without converting. A recovery email or retargeting push could reclaim these.`,
+            });
+        }
+
+        if (visitors > 0 && conversionRate < 1) {
+            insights.push({
+                kind: 'warning',
+                title: 'Conversion below 1%',
+                detail: `Current conversion sits at ${conversionRate.toFixed(1)}%. Audit checkout friction, shipping costs and pricing to lift it.`,
+            });
+        }
+
+        return {
+            range: rangeDays,
+            currencySymbol,
+            period: {
+                revenue: Math.round(revenue * 100) / 100,
+                orders: ordersCount,
+                visitors,
+                cartAdds,
+                checkouts,
+                purchases: ordersCount,
+                aov: Math.round(aov * 100) / 100,
+                conversionRate: Math.round(conversionRate * 100) / 100,
+            },
+            previous: {
+                revenue: Math.round(prevRevenue * 100) / 100,
+                orders: prevOrders,
+                visitors: prevVisitors,
+                purchases: prevOrders,
+                aov: Math.round(prevAov * 100) / 100,
+                conversionRate: Math.round(prevConversionRate * 100) / 100,
+            },
+            series,
+            funnel,
+            topProducts,
+            recentOrders,
+            insights,
+            hourlyActivity,
+            peakDay,
+            topChannels,
+        };
+    } catch (error) {
+        console.error('Failed to fetch admin dashboard:', error);
         return null;
     }
 }

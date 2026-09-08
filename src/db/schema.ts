@@ -49,7 +49,7 @@ export const customers = pgTable('customers', {
     firstName: text('first_name'),
     lastName: text('last_name'),
     madid: text('madid'), // Mobile Advertiser ID (IDFA/AAID)
-    totalSpend: integer('total_spend').default(0), // stored in cents (base currency USD for normalization or tracking)
+    totalSpend: integer('total_spend').default(0), // stored in smallest unit (paise/cents) of base currency
     ordersCount: integer('orders_count').default(0),
     lastSeenAt: timestamp('last_seen_at').defaultNow(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -65,7 +65,7 @@ export const customers = pgTable('customers', {
 export const orders = pgTable('orders', {
     id: uuid('id').primaryKey().defaultRandom(),
     customerId: uuid('customer_id').references(() => customers.id),
-    totalAmount: integer('total_amount').notNull(), // cents
+    totalAmount: integer('total_amount').notNull(), // smallest unit (paise/cents)
     currency: text('currency').default('USD'),
     status: text('status').default('pending'), // pending, paid, failed, shipped
     paymentId: text('payment_id'), // Razorpay Payment ID
@@ -88,7 +88,7 @@ export const orderItems = pgTable('order_items', {
     productName: text('product_name').notNull(),
     variantName: text('variant_name'), // Size, Color etc
     quantity: integer('quantity').notNull(),
-    price: integer('price').notNull(), // price at time of purchase
+    price: integer('price').notNull(), // price at time of purchase (smallest unit)
 }, (table) => {
     return {
         orderItemOrderIdx: index('order_item_order_idx').on(table.orderId),

@@ -17,15 +17,20 @@ export default function CartSidebar() {
   const [recommendations, setRecommendations] = useState<Product[]>([]);
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
-      // Fetch 3 products to recommend
-      const { products: recommendedProducts } = await getProducts({ limit: 3, sort: 'newest' });
-      setRecommendations(recommendedProducts as unknown as Product[]);
-    };
+    if (!state.isOpen) return;
 
-    if (state.isOpen) {
-      fetchRecommendations();
-    }
+    // Defer fetching + rendering recommendations until the slide-in finishes,
+    // so the DB query and image mounts don't hitch the open animation.
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const { products: recommendedProducts } = await getProducts({ limit: 3, sort: 'newest' });
+      if (!cancelled) setRecommendations(recommendedProducts as unknown as Product[]);
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [state.isOpen]);
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -113,7 +118,7 @@ export default function CartSidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => dispatch({ type: 'TOGGLE_CART' })}
-            className="fixed inset-0 bg-black/60 z-[300] backdrop-blur-[2px]"
+            className="fixed inset-0 bg-black/60 z-[300]"
           />
 
           {/* Cart Sidebar */}
@@ -122,6 +127,7 @@ export default function CartSidebar() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
+            style={{ willChange: 'transform' }}
             className="fixed right-0 top-0 h-full w-[90%] max-w-[420px] bg-white text-black z-[301] flex flex-col shadow-2xl font-sans"
           >
             {/* Header */}
@@ -153,12 +159,8 @@ export default function CartSidebar() {
                 // Filled State - Items List
                 <div className="p-6 space-y-8">
                   {state.items.map((item) => (
-                    <motion.div
+                    <div
                       key={item.id}
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
                       className="flex gap-5"
                     >
                       <div className="relative w-[100px] aspect-[4/5] bg-gray-100 flex-shrink-0">
@@ -190,27 +192,29 @@ export default function CartSidebar() {
                           <div className="flex items-center border-[1.5px] border-gray-200 px-1">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-7 h-7 flex items-center justify-center hover:text-gray-400 transiition-colors"
+                              aria-label={`Decrease quantity of ${item.name}`}
+                              className="w-11 h-11 flex items-center justify-center hover:text-gray-400 transition-colors active:scale-90"
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-4 h-4" />
                             </button>
-                            <span className="w-6 text-center text-[11px] font-black">{item.quantity}</span>
+                            <span className="w-8 text-center text-[13px] font-black">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-7 h-7 flex items-center justify-center hover:text-gray-400 transition-colors"
+                              aria-label={`Increase quantity of ${item.name}`}
+                              className="w-11 h-11 flex items-center justify-center hover:text-gray-400 transition-colors active:scale-90"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-4 h-4" />
                             </button>
                           </div>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="text-[9px] font-black uppercase tracking-[0.1em] text-gray-400 hover:text-black transition-colors border-b border-transparent hover:border-black leading-none"
+                            className="text-[9px] font-black uppercase tracking-[0.1em] text-gray-400 hover:text-black transition-colors border-b border-transparent hover:border-black leading-none py-2 px-2"
                           >
                             Remove
                           </button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -260,19 +264,19 @@ export default function CartSidebar() {
             {/* Footer */}
             {state.items.length > 0 && (
               <div className="border-t-[1.5px] border-black p-6 bg-white safe-bottom">
-                <div className="flex justify-between items-center mb-6 px-1">
+                <div className="flex justify-between items-center mb-5 px-1">
                   <span className="lowrel-header text-sm uppercase tracking-widest">Subtotal</span>
                   <span className="lowrel-header text-sm uppercase tracking-widest">{state.items[0]?.symbol || '$'} {state.total.toFixed(2)}</span>
                 </div>
                 <Link
                   href="/checkout"
                   onClick={handleBeginCheckout}
-                  className="block w-full bg-black text-white text-center py-4 uppercase font-black tracking-[0.2em] text-sm hover:bg-gray-900 transition-colors"
+                  className="block w-full bg-black text-white text-center h-14 flex items-center justify-center uppercase font-black tracking-[0.2em] text-sm hover:bg-gray-900 transition-colors active:scale-[0.98]"
                 >
                   <span className="lowrel-header">Checkout</span>
                 </Link>
-                <div className="mt-6 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black">No Duties for US Orders</p>
+                <div className="mt-5 text-center">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black">Secure checkout · No duties for US orders</p>
                 </div>
               </div>
             )}

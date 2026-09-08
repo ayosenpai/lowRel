@@ -1,18 +1,40 @@
-/* Shared design tokens for the premium Admin experience */
+/* Low Religion Admin — design language
+   Matches the storefront: Archivo black display, Inter body,
+   dusty-rose #d8a4bc on near-black #0F172A over cream surfaces. */
+
 :root {
-    --admin-primary: #5750F1;
-    --admin-stroke: #E6EBF1;
-    --admin-white: #FFFFFF;
-    --admin-bg-gray: #F9FAFB;
-    --admin-text-dark: #111928;
-    --admin-text-body: #64748B;
-    --admin-shadow-sm: 0px 1px 2px 0px rgba(0, 0, 0, 0.08);
-    --admin-shadow-default: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --lr-black: #0F172A;
+    --lr-ink: #111928;
+    --lr-rose: #d8a4bc;
+    --lr-rose-deep: #b9849f;
+    --lr-rose-soft: rgba(216, 164, 188, 0.14);
+    --lr-line: #E7E4E0;
+    --lr-cream: #F6F3EF;
+    --lr-white: #FFFFFF;
+    --lr-body: #6B7280;
+    --lr-muted: #9CA3AF;
+
+    --admin-primary: var(--lr-black);
+    --admin-accent: var(--lr-rose);
+    --admin-stroke: var(--lr-line);
+    --admin-white: var(--lr-white);
+    --admin-bg-gray: var(--lr-cream);
+    --admin-text-dark: var(--lr-ink);
+    --admin-text-body: var(--lr-body);
+    --admin-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --admin-shadow-default: 0 18px 40px -18px rgba(15, 23, 42, 0.22);
+    --admin-shadow-rose: 0 14px 30px -14px rgba(216, 164, 188, 0.55);
+}
+
+/* Display type — Archivo 900 loaded via next/font */
+.lr-display {
+    font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.01em;
 }
 
 .admin-glass {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(12px);
     border: 1px solid var(--admin-stroke);
 }
 
@@ -20,17 +42,42 @@
     background: var(--admin-white);
     border: 1px solid var(--admin-stroke);
     box-shadow: var(--admin-shadow-sm);
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
 }
 
 .admin-card:hover {
     box-shadow: var(--admin-shadow-default);
-    border-color: var(--admin-primary);
+    border-color: rgba(216, 164, 188, 0.55);
+}
+
+/* Eyebrow kicker above section titles */
+.lr-kicker {
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--lr-muted);
+}
+
+/* Rose pill label */
+.lr-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--lr-rose-soft);
+    color: var(--lr-rose-deep);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
 }
 
 /* Custom scrollbar for admin */
 .admin-scrollbar::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
 }
 
 .admin-scrollbar::-webkit-scrollbar-track {
@@ -43,10 +90,10 @@
 }
 
 .admin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--admin-primary);
+    background: var(--lr-rose);
 }
 
-/* Typography styles from NextAdmin */
+/* Typography styles */
 .text-heading-6 {
     font-size: 24px;
     line-height: 30px;

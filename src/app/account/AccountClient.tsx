@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { User } from '@supabase/supabase-js'
 import { logout } from '@/app/login/actions'
 import { Mail, User as UserIcon, LogOut, Package, Heart, MapPin } from 'lucide-react'
@@ -25,10 +26,10 @@ export default function AccountClient({ user }: AccountClientProps) {
                         <img
                             src={avatarUrl}
                             alt={displayName}
-                            className="w-24 h-24 rounded-full border-2 border-black"
+                            className="w-24 h-24 rounded-none border-2 border-black"
                         />
                     ) : (
-                        <div className="w-24 h-24 rounded-full border-2 border-black bg-gray-100 flex items-center justify-center">
+                        <div className="w-24 h-24 rounded-none border-2 border-black bg-gray-100 flex items-center justify-center">
                             <UserIcon className="w-12 h-12 text-gray-400" />
                         </div>
                     )}
@@ -133,12 +134,12 @@ export default function AccountClient({ user }: AccountClientProps) {
                             <p className="text-sm text-gray-500 mb-6">
                                 Start shopping to see your orders here
                             </p>
-                            <a
+                            <Link
                                 href="/collections/all"
                                 className="inline-block bg-black text-white px-8 py-3 text-xs uppercase font-black tracking-[0.15em] hover:bg-gray-800 transition-colors"
                             >
                                 Start Shopping
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useState, useEffect } from 'react';
 import { Product } from '@/lib/types';
 
 export interface CartItem extends Product {
@@ -21,7 +21,8 @@ type CartAction =
   | { type: 'TOGGLE_CART' }
   | { type: 'OPEN_CART' }
   | { type: 'CLOSE_CART' }
-  | { type: 'CLEAR_CART' };
+  | { type: 'CLEAR_CART' }
+  | { type: 'SET_CART'; payload: CartItem[] };
 
 const initialState: CartState = {
   items: [],
@@ -84,6 +85,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'CLEAR_CART':
       return { ...state, items: [], total: 0 };
 
+    case 'SET_CART':
+      return {
+        ...state,
+        items: action.payload,
+        total: action.payload.reduce((sum, item) => sum + ((item.price ?? 0) * item.quantity), 0),
+      };
+
     default:
       return state;
   }
@@ -96,6 +104,30 @@ const CartContext = createContext<{
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        const items = JSON.parse(savedCart);
+        if (Array.isArray(items)) {
+          dispatch({ type: 'SET_CART', payload: items });
+        }
+      } catch (e) {
+        console.error('Failed to parse cart from localStorage:', e);
+      }
+    }
+    setHasLoaded(true);
+  }, []);
+
+  // Save to localStorage on change, but only after initial load is completed
+  useEffect(() => {
+    if (hasLoaded) {
+      localStorage.setItem('cart', JSON.stringify(state.items));
+    }
+  }, [state.items, hasLoaded]);
 
   return (
     <CartContext.Provider value={{ state, dispatch }}>

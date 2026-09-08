@@ -39,7 +39,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full bg-black text-white pt-[60px] pb-[40px] font-sans" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <footer className="w-full bg-black text-white pt-[60px] pb-[40px] font-sans">
       <div className="container mx-auto px-5 lg:px-10">
         {/* Newsletter Section - Always visible */}
         <div className="mb-8 md:mb-12">
@@ -154,10 +154,10 @@ const Footer = () => {
         <div className="pt-4 md:pt-6 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
             <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-4 md:space-x-6 text-center">
-              <a href="/help/privacy" className="text-[8px] md:text-[9px] tracking-[0.15em] uppercase font-bold hover:text-white transition-colors" style={{ fontFamily: "'CatamaranOmnisend', sans-serif", fontWeight: 700, letterSpacing: '0.05em', lineHeight: '1.1' }}>
+              <a href="/help/privacy" className="text-[8px] md:text-[9px] tracking-[0.15em] uppercase font-bold hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter), sans-serif', fontWeight: 700, letterSpacing: '0.05em', lineHeight: '1.1' }}>
                 PRIVACY POLICY
               </a>
-              <a href="/help/terms" className="text-[8px] md:text-[9px] tracking-[0.15em] uppercase font-bold hover:text-white transition-colors" style={{ fontFamily: "'CatamaranOmnisend', sans-serif", fontWeight: 700, letterSpacing: '0.05em', lineHeight: '1.1' }}>
+              <a href="/help/terms" className="text-[8px] md:text-[9px] tracking-[0.15em] uppercase font-bold hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter), sans-serif', fontWeight: 700, letterSpacing: '0.05em', lineHeight: '1.1' }}>
                 TERMS OF USE
               </a>
             </div>

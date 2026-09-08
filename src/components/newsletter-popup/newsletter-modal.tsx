@@ -15,14 +15,14 @@ interface NewsletterModalProps {
 // --- LAYOUT CONFIGURATION ---
 // Adjust these values to quickly change the look and feel of the popup
 const LAYOUT_CONFIG = {
-    modalWidth: 'max-w-[400px] md:max-w-2xl',
+    modalWidth: 'max-w-[400px] md:max-w-2x1',
     imageWidthDesktop: 'md:w-[45%]',
-    contentPadding: 'p-8 md:p-12',
+    contentPadding: 'p-8 md:p-10',
     // Spacing between elements
-    spacingTitle: 'mb-1',
-    spacingDescription: 'mb-4',
-    spacingForm: 'space-y-4',
-    spacingFooter: 'mt-6 pt-4',
+    spacingTitle: 'mb-0.5',
+    spacingDescription: 'mb-1',
+    spacingForm: 'space-y-2',
+    spacingFooter: 'mt-2 pt-2',
 
     // Font Sizes
     fontTitle: 'text-2xl md:text-5xl',
@@ -96,12 +96,12 @@ export default function NewsletterModal({ isOpen, onClose }: NewsletterModalProp
                         {/* Aspect Ratio Image Container */}
                         <div className={`relative w-full ${LAYOUT_CONFIG.imageWidthDesktop} bg-gray-100 overflow-hidden aspect-[15/16] md:aspect-auto`}>
                             <Image
-                                src="/products/img (4).png"
+                                src="/products/T-shirt/lowrel Men/5.webp"
                                 alt="Newsletter Promo"
                                 fill
                                 unoptimized={true}
                                 sizes="(max-width: 768px) 100vw, 300px"
-                                className="object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                                className="object-cover transition-all duration-700"
                                 priority
                             />
                             <div className="absolute inset-0 bg-black/5" />
