@@ -1,7 +1,8 @@
 'use client';
 
-import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useEffect, useRef } from 'react';
 import { Product } from '@/lib/types';
+import { track } from '@/lib/analytics-client';
 
 export type WishlistItem = Product;
 
@@ -67,6 +68,7 @@ const WishlistContext = createContext<{
 
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     const [state, dispatch] = useReducer(wishlistReducer, initialState);
+    const seenIds = useRef<Set<string> | null>(null);
 
     // Load from localStorage on mount
     useEffect(() => {
@@ -79,6 +81,33 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     // Save to localStorage on change
     useEffect(() => {
         localStorage.setItem('wishlist', JSON.stringify(state.items));
+    }, [state.items]);
+
+    // Track newly added wishlist items (analytics: wishlist_add)
+    useEffect(() => {
+        const ids = new Set(state.items.map((item) => item.id));
+
+        // Skip the initial hydration pass
+        if (seenIds.current === null) {
+            seenIds.current = ids;
+            return;
+        }
+
+        state.items
+            .filter((item) => !seenIds.current!.has(item.id))
+            .forEach((item) => {
+                track({
+                    eventType: 'wishlist_add',
+                    payload: {
+                        productId: item.id,
+                        name: item.name,
+                        price: item.price,
+                        currency: item.currency,
+                    },
+                });
+            });
+
+        seenIds.current = ids;
     }, [state.items]);
 
     return (

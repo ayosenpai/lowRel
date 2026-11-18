@@ -3,9 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { customers } from '@/db/schema';
 import { eq, isNotNull, or } from 'drizzle-orm';
+import { getAdminUser } from '@/lib/admin-auth';
 
 export async function GET(req: NextRequest) {
     try {
+        // Server-side gate: only admins may export customer data
+        const { admin } = await getAdminUser();
+        if (!admin) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
         // Fetch all customers with either email or phone
         const data = await db.select({
             email: customers.email,

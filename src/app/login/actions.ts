@@ -4,6 +4,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { ensureProfile } from '@/lib/profile'
 
 export async function login(prevState: any, formData: FormData) {
     const supabase = await createClient()
@@ -11,13 +12,18 @@ export async function login(prevState: any, formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
     })
 
     if (error) {
         return { error: error.message }
+    }
+
+    // Maintain the profiles row used for identity joins (reviews, CRM)
+    if (data.user) {
+        await ensureProfile(data.user)
     }
 
     revalidatePath('/', 'layout')

@@ -1,55 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { visitors, profiles } from '@/db/schema';
-import { createClient } from '@/lib/supabase/server';
+import { visitors } from '@/db/schema';
 import { sql } from 'drizzle-orm';
+import { createClient } from '@/lib/supabase/server';
+import { ensureProfile } from '@/lib/profile';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Vercel sends geo values URI-encoded (e.g. "San%20Jose")
+function decodeGeo(value: string | null): string | null {
+    if (!value) return null;
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
+}
 
 export async function POST(request: NextRequest) {
     try {
         const visitorId = request.cookies.get('visitor_id')?.value;
         const userAgent = request.headers.get('user-agent');
-        const ip = request.headers.get('x-forwarded-for') || 'unknown';
-        const country = request.headers.get('x-vercel-ip-country');
-        const region = request.headers.get('x-vercel-ip-region');
-        const city = request.headers.get('x-vercel-ip-city');
+        const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || request.headers.get('x-real-ip') || 'unknown';
+        const country = decodeGeo(request.headers.get('x-vercel-ip-country'));
+        const region = decodeGeo(request.headers.get('x-vercel-ip-region'));
+        const city = decodeGeo(request.headers.get('x-vercel-ip-city'));
 
-        const body = await request.json().catch(() => ({}));
-
-        if (!visitorId) {
+        if (!visitorId || !UUID_RE.test(visitorId)) {
             return NextResponse.json({ error: 'No visitor ID found' }, { status: 400 });
         }
 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        // Ensure user profile exists in database if they are logged in via Supabase Auth
-        // to prevent foreign key errors with visitor profile stitching
+        // Keep the profile row in sync (FK target for visitor stitching + reviews)
         if (user?.id) {
-            const fullName = user.user_metadata?.full_name || '';
-            const [firstName, ...lastNameParts] = fullName.split(' ');
-            const lastName = lastNameParts.join(' ');
-
-            await db.insert(profiles).values({
-                id: user.id,
-                email: user.email || '',
-                firstName: firstName || null,
-                lastName: lastName || null,
-                avatarUrl: user.user_metadata?.avatar_url || null,
-                role: 'user',
-            }).onConflictDoNothing();
+            await ensureProfile(user);
         }
 
-        const locationData = {
-            country,
-            region,
-            city,
-        };
+        const locationData = { country, region, city };
 
         const cookieConsent = request.cookies.get('cookie_consent')?.value;
         const consentGiven = cookieConsent === 'all' || cookieConsent === 'true';
         const consentStatus = cookieConsent || 'pending';
 
-        const updateSet: any = {
+        const updateSet: Record<string, unknown> = {
             ipAddress: ip,
             userAgent: userAgent,
             location: locationData,
@@ -57,10 +52,10 @@ export async function POST(request: NextRequest) {
             lastSeenAt: new Date(),
             consentGiven: consentGiven,
             meta: sql`jsonb_set(
-                COALESCE(${visitors.meta}, '{}'::jsonb), 
-                '{consent_status}', 
+                COALESCE(${visitors.meta}, '{}'::jsonb),
+                '{consent_status}',
                 ${JSON.stringify(consentStatus)}::jsonb
-            )`
+            )`,
         };
 
         if (user?.id) {

@@ -72,10 +72,12 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
-  },
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
+
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-L9NZEQMD9F';
 
 export default function RootLayout({
   children,
@@ -89,7 +91,7 @@ export default function RootLayout({
 
         {/* Google Analytics */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-L9NZEQMD9F"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
         />
 
@@ -107,7 +109,7 @@ export default function RootLayout({
               'wait_for_update': 500
             });
 
-            gtag('config', 'G-L9NZEQMD9F');
+            gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
 

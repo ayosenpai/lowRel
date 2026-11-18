@@ -40,6 +40,9 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
   return {
     title,
     description,
+    alternates: {
+      canonical: `https://lowreligion.com/products/${handle}`,
+    },
     openGraph: {
       title,
       description,

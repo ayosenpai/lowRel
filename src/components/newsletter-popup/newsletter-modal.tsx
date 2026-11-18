@@ -6,6 +6,7 @@ import { X, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
+import { subscribeToNewsletter } from '@/lib/actions/marketing';
 
 interface NewsletterModalProps {
     isOpen: boolean;
@@ -33,6 +34,8 @@ const LAYOUT_CONFIG = {
 export default function NewsletterModal({ isOpen, onClose }: NewsletterModalProps) {
     const [email, setEmail] = useState('');
     const [isSubscribed, setIsSubscribed] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -45,15 +48,28 @@ export default function NewsletterModal({ isOpen, onClose }: NewsletterModalProp
         };
     }, [isOpen]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email) {
-            // Here you would typically call your subscription API
-            setIsSubscribed(true);
-            // Automatically close after a delay if subscribed
-            setTimeout(() => {
-                onClose();
-            }, 2000);
+        if (!email || isSubmitting) return;
+
+        setIsSubmitting(true);
+        setError('');
+
+        try {
+            const result = await subscribeToNewsletter({ email, source: 'popup' });
+
+            if (result.success) {
+                setIsSubscribed(true);
+                setTimeout(() => {
+                    onClose();
+                }, 2000);
+            } else {
+                setError(result.error || 'Could not subscribe. Please try again.');
+            }
+        } catch {
+            setError('Could not subscribe. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -145,10 +161,14 @@ export default function NewsletterModal({ isOpen, onClose }: NewsletterModalProp
                                     />
                                     <Button
                                         type="submit"
-                                        className="w-full h-12 bg-black text-white hover:bg-gray-900 rounded-none uppercase font-black tracking-widest text-xs transition-all"
+                                        disabled={isSubmitting}
+                                        className="w-full h-12 bg-black text-white hover:bg-gray-900 rounded-none uppercase font-black tracking-widest text-xs transition-all disabled:opacity-60"
                                     >
-                                        SUBSCRIBE <ChevronRight className="ml-2 w-4 h-4" />
+                                        {isSubmitting ? 'SUBSCRIBING…' : <>SUBSCRIBE <ChevronRight className="ml-2 w-4 h-4" /></>}
                                     </Button>
+                                    {error && (
+                                        <p className="text-[11px] text-red-500 font-bold uppercase tracking-wider">{error}</p>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={onClose}

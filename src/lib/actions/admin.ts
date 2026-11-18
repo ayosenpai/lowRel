@@ -4,8 +4,10 @@ import { db } from '@/db';
 import { userEvents, products, customers, orders } from '@/db/schema';
 import { count, sum, desc, asc, eq, sql, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export async function getAdminStats() {
+    await requireAdmin();
     try {
         // 1. Total Purchases
         const purchaseEvents = await db.select().from(userEvents).where(eq(userEvents.eventType, 'purchase'));
@@ -81,10 +83,12 @@ export async function getAdminStats() {
 }
 
 export async function getAdminProducts() {
+    await requireAdmin();
     return await db.select().from(products).orderBy(desc(products.createdAt));
 }
 
 export async function addProduct(data: any) {
+    await requireAdmin();
     try {
         await db.insert(products).values({
             id: crypto.randomUUID(),
@@ -116,6 +120,7 @@ export async function addProduct(data: any) {
 }
 
 export async function deleteProduct(id: string) {
+    await requireAdmin();
     try {
         await db.delete(products).where(eq(products.id, id));
 
@@ -131,6 +136,7 @@ export async function deleteProduct(id: string) {
 }
 
 export async function getProductById(id: string) {
+    await requireAdmin();
     try {
         const product = await db.select().from(products).where(eq(products.id, id));
         return product[0] || null;
@@ -141,6 +147,7 @@ export async function getProductById(id: string) {
 }
 
 export async function updateProduct(id: string, data: any) {
+    await requireAdmin();
     try {
         await db.update(products)
             .set({
@@ -174,6 +181,7 @@ export async function updateProduct(id: string, data: any) {
 }
 
 export async function getDetailedAnalytics() {
+    await requireAdmin();
     try {
         const events = await db.select().from(userEvents);
 
@@ -283,6 +291,7 @@ export async function getDetailedAnalytics() {
 }
 
 export async function getMarketingSegments() {
+    await requireAdmin();
     try {
         const events = await db.select().from(userEvents);
         const allCustomers = await db.select().from(customers);
@@ -365,6 +374,7 @@ export interface AdminDashboardData {
 }
 
 export async function getAdminDashboard(rangeDays = 7): Promise<AdminDashboardData | null> {
+    await requireAdmin();
     try {
         const now = new Date();
         const start = new Date(now);

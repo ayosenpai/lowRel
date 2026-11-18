@@ -3,15 +3,32 @@
 import React, { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { subscribeToNewsletter } from "@/lib/actions/marketing";
 
 export default function Newsletter() {
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setIsSubscribed(true);
+    if (!email || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const result = await subscribeToNewsletter({ email, source: 'newsletter_section' });
+      if (result.success) {
+        setIsSubscribed(true);
+      } else {
+        setError(result.error || "Could not subscribe. Please try again.");
+      }
+    } catch {
+      setError("Could not subscribe. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -62,7 +79,8 @@ export default function Newsletter() {
             />
             <button
               type="submit"
-              className="bg-[#d8a4bc] text-black w-[50px] flex items-center justify-center border-l border-black hover:bg-black hover:text-[#d8a4bc] transition-colors rounded-none"
+              disabled={isSubmitting}
+              className="bg-[#d8a4bc] text-black w-[50px] flex items-center justify-center border-l border-black hover:bg-black hover:text-[#d8a4bc] transition-colors rounded-none disabled:opacity-60"
               aria-label="Subscribe"
             >
               <ChevronRight className="w-5 h-5" strokeWidth={2} />
@@ -72,6 +90,9 @@ export default function Newsletter() {
           <div className="text-[14px] font-medium border border-black px-8 py-3 uppercase tracking-wider">
             Thank you!
           </div>
+        )}
+        {error && !isSubscribed && (
+          <p className="text-[11px] font-bold uppercase tracking-wider mt-3 text-red-900">{error}</p>
         )}
       </motion.div>
     </section>

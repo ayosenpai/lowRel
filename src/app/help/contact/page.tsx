@@ -1,22 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useActionState } from 'react';
 import { motion } from 'framer-motion';
 import HelpPagination from '@/components/ui/help-pagination';
-import { Send, Phone, Mail, MapPin, Clock, CheckCircle } from 'lucide-react';
+import { Send, Phone, Mail, Clock, CheckCircle } from 'lucide-react';
+import { submitContactMessage, type ContactFormState } from '@/lib/actions/contact';
+
+const initialState: ContactFormState = { status: 'idle' };
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    orderNumber: '',
-    subject: 'general',
-    message: ''
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const [state, formAction, isPending] = useActionState(submitContactMessage, initialState);
 
   return (
     <div className="max-w-4xl space-y-8 md:space-y-12">
@@ -35,29 +28,34 @@ export default function ContactPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
         {/* Form */}
-        <form className="space-y-6">
+        <form action={formAction} className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Full Name</label>
+              <label htmlFor="contact-name" className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Full Name</label>
               <input
+                id="contact-name"
                 type="text"
                 name="name"
                 placeholder="NAME"
+                required
                 className="w-full bg-gray-50 border border-gray-100 rounded-full py-4 px-6 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-white focus:border-black transition-all"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Email</label>
+              <label htmlFor="contact-email" className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Email</label>
               <input
+                id="contact-email"
                 type="email"
                 name="email"
                 placeholder="EMAIL@DOMAIN.COM"
+                required
                 className="w-full bg-gray-50 border border-gray-100 rounded-full py-4 px-6 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-white focus:border-black transition-all"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Order #</label>
+              <label htmlFor="contact-order" className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Order #</label>
               <input
+                id="contact-order"
                 type="text"
                 name="orderNumber"
                 placeholder="OPTIONAL"
@@ -66,16 +64,37 @@ export default function ContactPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Message</label>
+            <label htmlFor="contact-message" className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-4">Message</label>
             <textarea
+              id="contact-message"
               name="message"
               rows={4}
+              required
               placeholder="HOW CAN WE HELP?"
               className="w-full bg-gray-50 border border-gray-100 rounded-[32px] py-6 px-6 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-white focus:border-black transition-all resize-none"
             />
           </div>
-          <button className="w-full bg-black text-white py-5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#d8a4bc] transition-all shadow-2xl active:scale-95">
-            Send Message <Send size={14} />
+
+          {state.status === 'success' && (
+            <div className="flex items-start gap-3 border border-black bg-black text-white px-6 py-4 rounded-full">
+              <CheckCircle size={16} className="text-[#d8a4bc] mt-0.5 shrink-0" />
+              <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">{state.message}</p>
+            </div>
+          )}
+
+          {state.status === 'error' && (
+            <div className="flex items-start gap-3 border border-red-200 bg-red-50 text-red-700 px-6 py-4 rounded-full">
+              <span className="text-sm font-black mt-0.5 shrink-0">!</span>
+              <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">{state.message}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-black text-white py-5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#d8a4bc] transition-all shadow-2xl active:scale-95 disabled:opacity-60"
+          >
+            {isPending ? 'SENDING…' : <>Send Message <Send size={14} /></>}
           </button>
         </form>
 

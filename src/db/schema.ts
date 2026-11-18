@@ -149,6 +149,52 @@ export const visitors = pgTable('visitors', {
     };
 });
 
+// Journey Sessions: one row per browser session (lowrel_session_id cookie)
+export const sessions = pgTable('sessions', {
+    id: text('id').primaryKey(), // lowrel_session_id cookie value
+    visitorId: uuid('visitor_id').references(() => visitors.id),
+    customerId: uuid('customer_id').references(() => customers.id),
+    userId: uuid('user_id'), // Supabase auth user id (if logged in)
+    landingPath: text('landing_path'), // First page seen in the session
+    exitPath: text('exit_path'), // Most recent page seen
+    referrer: text('referrer'),
+    userAgent: text('user_agent'),
+    ipAddress: text('ip_address'),
+    country: text('country'),
+    region: text('region'),
+    city: text('city'),
+    pageViews: integer('page_views').default(0).notNull(),
+    eventCount: integer('event_count').default(0).notNull(),
+    startedAt: timestamp('started_at').defaultNow().notNull(),
+    lastSeenAt: timestamp('last_seen_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        sessionVisitorIdx: index('session_visitor_idx').on(table.visitorId),
+        sessionCustomerIdx: index('session_customer_idx').on(table.customerId),
+        sessionLastSeenIdx: index('session_last_seen_idx').on(table.lastSeenAt),
+    };
+});
+
+// Marketing: newsletter subscribers
+export const newsletterSubscribers = pgTable('newsletter_subscribers', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull().unique(),
+    source: text('source').default('popup'), // popup | footer | checkout
+    userId: uuid('user_id'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Support: contact form messages
+export const contactMessages = pgTable('contact_messages', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    email: text('email').notNull(),
+    subject: text('subject'),
+    message: text('message').notNull(),
+    status: text('status').default('new').notNull(), // new | read | resolved
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
     orders: many(orders),

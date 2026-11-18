@@ -3,10 +3,36 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Instagram, Youtube, ChevronDown, ChevronUp, Mail, Smartphone } from 'lucide-react';
+import { subscribeToNewsletter } from '@/lib/actions/marketing';
 
 const Footer = () => {
 
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [newsletterError, setNewsletterError] = useState('');
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || newsletterStatus === 'submitting') return;
+
+    setNewsletterStatus('submitting');
+    setNewsletterError('');
+
+    try {
+      const result = await subscribeToNewsletter({ email: newsletterEmail, source: 'footer' });
+      if (result.success) {
+        setNewsletterStatus('success');
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+        setNewsletterError(result.error || 'Could not subscribe. Please try again.');
+      }
+    } catch {
+      setNewsletterStatus('error');
+      setNewsletterError('Could not subscribe. Please try again.');
+    }
+  };
 
   const toggleSection = (title: string) => {
     setExpandedSections(prev =>
@@ -48,18 +74,32 @@ const Footer = () => {
             <p className="text-[12px] mb-4 md:mb-6 text-gray-400">Get 15% off your first order + early access to new drops and restocks.</p>
           </div>
           <div className="max-w-xs md:max-w-sm mx-auto">
-            <div className="flex border border-gray-700">
+            <form onSubmit={handleNewsletterSubmit} className="flex border border-gray-700">
               <input
                 type="email"
                 placeholder="Enter your email"
+                required
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
                 className="flex-1 px-3 py-2 bg-black text-white text-sm placeholder:text-gray-500 focus:outline-none"
               />
-              <button className="px-3 py-2 bg-black text-white font-bold text-xs hover:bg-gray-900 transition-colors tracking-[0.5px] uppercase border-l border-gray-700">
+              <button
+                type="submit"
+                disabled={newsletterStatus === 'submitting'}
+                aria-label="Subscribe to newsletter"
+                className="px-3 py-2 bg-black text-white font-bold text-xs hover:bg-gray-900 transition-colors tracking-[0.5px] uppercase border-l border-gray-700 disabled:opacity-60"
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
-            </div>
+            </form>
+            {newsletterStatus === 'success' && (
+              <p className="text-[10px] uppercase tracking-widest text-[#d8a4bc] mt-2 text-center">You&apos;re in the cult — thanks for subscribing.</p>
+            )}
+            {newsletterStatus === 'error' && (
+              <p className="text-[10px] uppercase tracking-widest text-red-400 mt-2 text-center">{newsletterError}</p>
+            )}
           </div>
         </div>
 

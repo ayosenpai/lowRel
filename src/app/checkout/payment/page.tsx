@@ -7,7 +7,6 @@ import { ArrowLeft, CreditCard, Lock, ShieldCheck, ChevronRight, ShoppingBag, Ch
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
-import { createOrderRecord } from '@/lib/actions/crm';
 import { trackEvent } from '@/lib/actions/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -160,15 +159,28 @@ export default function PaymentPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    amount: finalTotal,
-                    currency: currencyCode,
-                    receipt: `receipt_${Date.now()}`,
+                    // Server recomputes the amount from these items — the
+                    // displayed total is never trusted for charging.
+                    items: state.items.map((item) => ({
+                        id: item.id,
+                        quantity: item.quantity,
+                        size: item.size,
+                    })),
+                    discountCode: discountCode || null,
                     customer: {
                         email: checkoutData.email,
                         firstName: checkoutData.firstName,
                         lastName: checkoutData.lastName,
                         phone: checkoutData.phone,
-                    }
+                    },
+                    shippingAddress: {
+                        address: checkoutData.address,
+                        apartment: checkoutData.apartment,
+                        city: checkoutData.city,
+                        state: checkoutData.state,
+                        postalCode: checkoutData.postalCode,
+                        country: checkoutData.country,
+                    },
                 }),
             });
 
@@ -227,29 +239,16 @@ export default function PaymentPage() {
                             return;
                         }
 
-                        // Step 2: Record order in CRM (only after verified)
-                        if (orderData.customerId) {
-                            await createOrderRecord({
-                                customerId: orderData.customerId,
-                                razorpayOrderId: response.razorpay_order_id,
-                                razorpayPaymentId: response.razorpay_payment_id,
-                                amount: orderData.amount,
-                                currency: orderData.currency,
-                                items: state.items,
-                                shippingAddress: {
-                                    address: checkoutData.address,
-                                    city: checkoutData.city,
-                                    postalCode: checkoutData.postalCode,
-                                    country: checkoutData.country,
-                                },
-                            });
-                        }
+                        // Step 2: The verification call above already recorded the
+                        // order server-side (status: paid, LTV updated, idempotent).
+                        // The Razorpay webhook is the backstop if this tab dies.
 
                         // Step 3: Track analytics event
                         trackEvent({
                             eventType: 'purchase',
                             payload: {
                                 total: finalTotal,
+                                currency: currencyCode,
                                 orderId: response.razorpay_order_id,
                                 paymentId: response.razorpay_payment_id,
                                 items: state.items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity })),
