@@ -164,14 +164,28 @@ analytics consent is denied. This is a policy decision, not a code gap.
 
 ---
 
-## 8. Historical orders to reconcile (manual)
+## 8. Orders management & historical reconciliation (manual)
+
+`/admin/orders` is the control surface for order integrity:
+
+- Filter by status, search by order/payment/customer, and page through results.
+- Open an order to see line items, the captured shipping address and the
+  Razorpay order/payment ids.
+- Change status (pending, paid, shipped, completed, failed, cancelled) and
+  record a payment reference. Moving an order into a revenue status
+  (`paid`/`shipped`/`completed`) adds it to collected revenue and the
+  customer's lifetime spend; moving it back out reverses the change, so
+  toggling never double-counts.
+- Export the current filter to CSV for matching against the Razorpay Dashboard.
 
 There are ~8 Razorpay purchases tied to customers whose `profiles`/`customers`
 row shows `orders_count = 0`. Those payments predate the webhook, so they were
 never written to `orders` and cannot be reconstructed automatically.
 
 1. Export payments from the Razorpay Dashboard for the affected period.
-2. Insert the missing rows (or update LTV) manually. Template:
+2. Match them in `/admin/orders` (or insert the missing rows) and set the status
+   to `paid` with the real payment id. For bulk repair, the SQL below still
+   works and recomputes LTV from recorded paid orders.
 
 ```sql
 -- Inspect mismatches
@@ -244,3 +258,6 @@ the deploy that includes `sitemap.ts`.
    are populated.
 7. Newsletter popup/footer and contact form persist rows.
 8. `/admin` is inaccessible without the admin role.
+9. `/admin/homepage` — reorder a section, save, confirm `/` reflects the change.
+10. `/admin/orders` — filter by `paid`, open an order, change status and save;
+    confirm the customer's lifetime spend moves with it. Export CSV opens.

@@ -14,6 +14,7 @@ import {
     X,
     Search,
     LayoutTemplate,
+    ShoppingBag,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,6 +56,7 @@ export default function AdminShell({ email, children }: { email: string; childre
         {
             group: 'Management',
             items: [
+                { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
                 { name: 'Products', href: '/admin/products', icon: Package },
                 { name: 'Customers', href: '/admin/customers', icon: Users },
             ]
@@ -105,7 +107,7 @@ export default function AdminShell({ email, children }: { email: string; childre
                             )}
                             <div className="space-y-1">
                                 {group.items.map((item) => {
-                                    const isActive = pathname === item.href;
+                                    const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(`${item.href}/`));
                                     const Icon = item.icon;
                                     return (
                                         <Link
