@@ -13,6 +13,7 @@ import {
     Menu,
     X,
     Search,
+    LayoutTemplate,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,6 +44,12 @@ export default function AdminShell({ email, children }: { email: string; childre
             items: [
                 { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
                 { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+            ]
+        },
+        {
+            group: 'Storefront',
+            items: [
+                { name: 'Homepage', href: '/admin/homepage', icon: LayoutTemplate },
             ]
         },
         {

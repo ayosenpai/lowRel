@@ -14,8 +14,14 @@ const REPEATS = 3;
 
 export default function NewArrivalsBanner({
   products = [],
+  title = 'Shop The Look',
+  ctaLabel = '',
+  ctaHref = '',
 }: {
   products?: any[];
+  title?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -56,10 +62,20 @@ export default function NewArrivalsBanner({
   return (
     <section className="w-full overflow-hidden border-t border-black bg-[#d8a4bc] py-1">
       <div className="flex flex-col gap-6 max-w-[430px] mx-auto w-full">
-        <div className="px-5">
-          <h2 className="text-[18px] font-bold uppercase tracking-[0.2em] text-black">
-            Shop The Look
-          </h2>
+        <div className="px-5 flex items-end justify-between gap-4">
+          {title && (
+            <h2 className="text-[18px] font-bold uppercase tracking-[0.2em] text-black">
+              {title}
+            </h2>
+          )}
+          {ctaLabel && ctaHref && (
+            <Link
+              href={ctaHref}
+              className="flex-shrink-0 border-b border-black pb-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-black hover:text-black/50 transition-colors"
+            >
+              {ctaLabel}
+            </Link>
+          )}
         </div>
 
         <div

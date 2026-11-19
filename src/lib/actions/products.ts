@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { products } from '@/db/schema';
-import { eq, and, ilike, sql, desc, asc } from 'drizzle-orm';
+import { eq, and, ilike, sql, desc, asc, inArray } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { unstable_cache } from 'next/cache';
 import type { Product } from '@/lib/types';
@@ -16,6 +16,7 @@ export interface GetProductsOptions {
     region?: 'IN' | 'GLOBAL';
     isNew?: boolean;
     isSale?: boolean;
+    ids?: string[];
 }
 
 export const getProducts = async (options: GetProductsOptions = {}) => {
@@ -42,7 +43,8 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
         sort = 'newest',
         region = 'GLOBAL',
         isNew,
-        isSale
+        isSale,
+        ids
     } = options;
 
     const offset = (page - 1) * limit;
@@ -65,6 +67,10 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
 
     if (isSale !== undefined) {
         conditions.push(eq(products.isSale, isSale));
+    }
+
+    if (ids && ids.length > 0) {
+        conditions.push(inArray(products.id, ids));
     }
 
     if (conditions.length > 0) {

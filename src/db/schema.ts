@@ -195,6 +195,22 @@ export const contactMessages = pgTable('contact_messages', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Storefront: editable homepage layout
+export const homepageSections = pgTable('homepage_sections', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    type: text('type').notNull(), // hero | category-grid | product-grid | product-carousel | product-strip
+    title: text('title'),
+    config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+    position: integer('position').notNull().default(0),
+    isVisible: boolean('is_visible').notNull().default(true),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        homepagePositionIdx: index('homepage_section_position_idx').on(table.position),
+    };
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
     orders: many(orders),

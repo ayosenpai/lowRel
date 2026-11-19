@@ -5,10 +5,17 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import SupabaseImage from '@/components/SupabaseImage';
 
-export default function CategoryGridClient({ categoryData }: { categoryData: any[] }) {
+export default function CategoryGridClient({ categoryData, columns = 2 }: { categoryData: any[]; columns?: number }) {
+  const columnClass =
+    columns >= 4
+      ? 'grid-cols-2 md:grid-cols-4'
+      : columns === 3
+        ? 'grid-cols-2 md:grid-cols-3'
+        : 'grid-cols-2';
+
   return (
     <section className="w-full bg-black">
-      <div className="grid grid-cols-2 gap-[1px] bg-[#333333]">
+      <div className={`grid ${columnClass} gap-[1px] bg-[#333333]`}>
         {categoryData.map((category, index) => (
           <motion.div
             key={index}

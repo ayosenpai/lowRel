@@ -91,8 +91,10 @@ without the role, and renders only for the admin account.
 
 ## 5. Database migration
 
-`supabase/migrations/0004_round_ultimo.sql` is additive and
-idempotent. It creates:
+`supabase/migrations/0004_round_ultimo.sql` and
+`supabase/migrations/0005_lucky_hulk.sql` are additive and idempotent.
+
+0004 creates:
 
 - `sessions` — one row per browser session (`lowrel_session_id` cookie) with
   landing/exit path, referrer, geo, page-view and event counts.
@@ -101,16 +103,41 @@ idempotent. It creates:
 - `contact_messages` — support form inbox.
 - Lookup indexes on `user_events.visitor_id` and `orders.razorpay_order_id`.
 
-It has already been applied to the production database. For a fresh
-environment run it before deploying the app:
+0005 creates `homepage_sections`, the ordered section list behind
+`/admin/homepage`.
+
+They have already been applied to the production database. For a fresh
+environment run them before deploying the app:
 
 ```bash
 # psql "$DATABASE_URL" -f supabase/migrations/0004_round_ultimo.sql
+# psql "$DATABASE_URL" -f supabase/migrations/0005_lucky_hulk.sql
 ```
 
 ---
 
-## 6. Data capture — what is now recorded
+## 6. Homepage builder
+
+`/admin/homepage` controls the live homepage without code. The layout is an
+ordered list of sections stored in `homepage_sections`; each section has a
+type, a title, a visibility flag and a whitelisted JSON config:
+
+| Section | Controls |
+| --- | --- |
+| Hero | video/image URLs, height, headline, subheadline, CTA |
+| Category Grid | 2–4 columns, tiles (label/link/image), fallback image category |
+| Product Grid | source (category / all / new / sale / manual products), limit, 2–5 columns, view-all link |
+| Product Carousel | source, limit, cards per view, view-all link |
+| Shop The Look Strip | source, limit, heading, view-all link |
+
+Only known section types are rendered, and every server action re-checks
+`requireAdmin()` and sanitizes the config. Saving replaces the full ordered
+layout in one transaction and revalidates `/`. If the table is missing or
+empty, the storefront falls back to the original built-in layout.
+
+---
+
+## 7. Data capture — what is now recorded
 
 | Signal | Before | Now |
 | --- | --- | --- |
@@ -137,7 +164,7 @@ analytics consent is denied. This is a policy decision, not a code gap.
 
 ---
 
-## 7. Historical orders to reconcile (manual)
+## 8. Historical orders to reconcile (manual)
 
 There are ~8 Razorpay purchases tied to customers whose `profiles`/`customers`
 row shows `orders_count = 0`. Those payments predate the webhook, so they were
@@ -170,7 +197,7 @@ Going forward the webhook + pending-order row eliminates this class of loss.
 
 ---
 
-## 8. Security
+## 9. Security
 
 - Security headers are set in `next.config.ts`: `nosniff`, `SAMEORIGIN`,
   `strict-origin-when-cross-origin`, a restrictive `Permissions-Policy`,
@@ -189,7 +216,7 @@ Going forward the webhook + pending-order row eliminates this class of loss.
 
 ---
 
-## 9. SEO
+## 10. SEO
 
 - `robots.ts` → `/robots.txt`, sitemap reference, private routes disallowed.
 - `sitemap.ts` → `/sitemap.xml`, static routes + every product, generated at
@@ -204,7 +231,7 @@ the deploy that includes `sitemap.ts`.
 
 ---
 
-## 10. Post-deploy smoke test
+## 11. Post-deploy smoke test
 
 1. `GET /` — renders, no console errors.
 2. `GET /collections/all` and a product page — images load, add to cart works.

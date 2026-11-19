@@ -11,14 +11,50 @@ import {
   COMING_SOON_PRICE_LABEL,
 } from '@/components/product-coming-soon';
 
-export default function ProductShowcase({ products = [] }: { products?: Product[] }) {
+const GRID_COLUMNS: Record<number, string> = {
+  2: 'grid-cols-2',
+  3: 'grid-cols-2 md:grid-cols-3',
+  4: 'grid-cols-2 md:grid-cols-4',
+  5: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5',
+};
+
+export default function ProductShowcase({
+  products = [],
+  title = '',
+  ctaLabel = '',
+  ctaHref = '',
+  columns = 3,
+}: {
+  products?: Product[];
+  title?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  columns?: number;
+}) {
   if (!products.length) return null;
 
   return (
     <section className="w-full bg-white py-0">
       <div className="mx-auto max-w-full">
-        <div className="grid grid-cols-3 bg-black gap-[0.9px]">
-          {products.slice(0, 9).map((product, index) => (
+        {(title || (ctaLabel && ctaHref)) && (
+          <div className="flex items-end justify-between gap-4 px-5 py-8 lg:px-10">
+            {title && (
+              <h2 className="text-xl font-black uppercase tracking-tight md:text-3xl">
+                {title}
+              </h2>
+            )}
+            {ctaLabel && ctaHref && (
+              <Link
+                href={ctaHref}
+                className="flex-shrink-0 border-b border-black pb-1 text-[10px] font-black uppercase tracking-[0.18em] hover:text-gray-500 transition-colors"
+              >
+                {ctaLabel}
+              </Link>
+            )}
+          </div>
+        )}
+        <div className={`grid ${GRID_COLUMNS[columns] || GRID_COLUMNS[3]} bg-black gap-[0.9px]`}>
+          {products.map((product, index) => (
             <ProductCard key={product.id} product={product} index={index} />
           ))}
         </div>

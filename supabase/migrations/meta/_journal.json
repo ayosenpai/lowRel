@@ -36,6 +36,13 @@
       "when": 1795020821110,
       "tag": "0004_round_ultimo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795057468757,
+      "tag": "0005_lucky_hulk",
+      "breakpoints": true
     }
   ]
 }

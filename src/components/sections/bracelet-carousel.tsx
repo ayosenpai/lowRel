@@ -9,11 +9,47 @@ import {
   COMING_SOON_LABEL,
 } from "@/components/product-coming-soon";
 
-export default function BraceletCarousel({ products = [] }: { products?: Product[] }) {
+const WIDTH_CLASSES: Record<number, string> = {
+  2: "w-[70vw] md:w-1/2",
+  3: "w-[47vw] md:w-1/3",
+  4: "w-[47vw] md:w-[33vw] lg:w-1/4",
+  5: "w-[40vw] md:w-1/4 lg:w-1/5",
+};
+
+export default function BraceletCarousel({
+  products = [],
+  title = "",
+  ctaLabel = "",
+  ctaHref = "",
+  itemsPerView = 4,
+}: {
+  products?: Product[];
+  title?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  itemsPerView?: number;
+}) {
   if (products.length === 0) return null;
 
   return (
     <section className="w-full bg-white">
+      {(title || (ctaLabel && ctaHref)) && (
+        <div className="flex items-end justify-between gap-4 px-5 pt-8 pb-4 lg:px-10">
+          {title && (
+            <h2 className="text-xl font-black uppercase tracking-tight md:text-3xl">
+              {title}
+            </h2>
+          )}
+          {ctaLabel && ctaHref && (
+            <Link
+              href={ctaHref}
+              className="flex-shrink-0 border-b border-black pb-1 text-[10px] font-black uppercase tracking-[0.18em] hover:text-gray-500 transition-colors"
+            >
+              {ctaLabel}
+            </Link>
+          )}
+        </div>
+      )}
       <div
         className="flex overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         style={{ WebkitOverflowScrolling: "touch" }}
@@ -22,7 +58,7 @@ export default function BraceletCarousel({ products = [] }: { products?: Product
           <Link
             key={product.id}
             href={`/products/${product.handle}`}
-            className="relative block flex-shrink-0 w-[47vw] md:w-[33vw] lg:w-[25vw]"
+            className={`relative block flex-shrink-0 ${WIDTH_CLASSES[itemsPerView] || WIDTH_CLASSES[4]}`}
           >
             <div className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-white">
               <SupabaseImage
