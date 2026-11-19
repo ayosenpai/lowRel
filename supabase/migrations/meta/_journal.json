@@ -43,6 +43,13 @@
       "when": 1795057468757,
       "tag": "0005_lucky_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795058458738,
+      "tag": "0006_clumsy_emma_frost",
+      "breakpoints": true
     }
   ]
 }

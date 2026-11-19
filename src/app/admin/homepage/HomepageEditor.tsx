@@ -1,26 +1,36 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
     ArrowDown,
     ArrowUp,
+    Bookmark,
     ChevronDown,
     ExternalLink,
     Eye,
     EyeOff,
     GripVertical,
+    Monitor,
     Plus,
     RotateCcw,
     Save,
+    Smartphone,
+    Tablet,
     Trash2,
 } from 'lucide-react';
-import { saveHomepageSections } from '@/lib/actions/homepage';
+import {
+    deleteHomepageLayout,
+    saveHomepageDraft,
+    saveHomepageLayout,
+    saveHomepageSections,
+} from '@/lib/actions/homepage';
 import {
     HOMEPAGE_SECTION_TYPES,
     SECTION_DEFINITIONS,
     createHomepageSection,
     defaultHomepageSections,
+    type HomepageLayoutRecord,
     type HomepageSection,
     type HomepageSectionConfig,
     type HomepageSectionType,
@@ -35,12 +45,19 @@ export interface HomepageProductOption {
 
 interface HomepageEditorProps {
     initialSections: HomepageSection[];
+    initialLayouts: HomepageLayoutRecord[];
     products: HomepageProductOption[];
     categories: string[];
 }
 
 const inputClass =
     'w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-xs font-medium text-[#0F172A] outline-none transition-colors focus:border-[#d8a4bc] focus:ring-1 focus:ring-[#d8a4bc]';
+
+const PREVIEW_DEVICES = [
+    { id: 'desktop', label: 'Desktop', icon: Monitor, maxWidth: '100%' },
+    { id: 'tablet', label: 'Tablet', icon: Tablet, maxWidth: '820px' },
+    { id: 'mobile', label: 'Mobile', icon: Smartphone, maxWidth: '390px' },
+] as const;
 
 function Field({
     label,
@@ -72,6 +89,7 @@ function categoryOptions(categories: string[], current?: string) {
 
 export default function HomepageEditor({
     initialSections,
+    initialLayouts,
     products,
     categories,
 }: HomepageEditorProps) {
@@ -80,6 +98,37 @@ export default function HomepageEditor({
     const [saving, setSaving] = useState(false);
     const [dirty, setDirty] = useState(false);
     const [status, setStatus] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+
+    // Draft preview: autosaved to an unpublished row, never to the live layout.
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+    const [previewVersion, setPreviewVersion] = useState(0);
+    const [draftState, setDraftState] = useState<'saved' | 'saving' | 'error'>('saved');
+    const lastDraftRef = useRef('');
+
+    // Named layout slots.
+    const [layouts, setLayouts] = useState<HomepageLayoutRecord[]>(initialLayouts);
+    const [slotName, setSlotName] = useState('');
+    const [slotBusy, setSlotBusy] = useState(false);
+
+    useEffect(() => {
+        const payload = JSON.stringify(sections);
+        if (payload === lastDraftRef.current) return;
+
+        setDraftState('saving');
+        const timer = setTimeout(async () => {
+            try {
+                await saveHomepageDraft(sections);
+                lastDraftRef.current = payload;
+                setPreviewVersion((version) => version + 1);
+                setDraftState('saved');
+            } catch {
+                setDraftState('error');
+            }
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, [sections]);
 
     const visibleCount = useMemo(
         () => sections.filter((section) => section.isVisible).length,
@@ -184,6 +233,75 @@ export default function HomepageEditor({
         }
     };
 
+    const handleSaveSlot = async () => {
+        const name = slotName.trim();
+        if (!name) {
+            setStatus({ kind: 'error', text: 'Give the layout slot a name first.' });
+            return;
+        }
+
+        setSlotBusy(true);
+        try {
+            const result = await saveHomepageLayout(name, sections);
+            setLayouts(result.layouts);
+            const saved = result.layouts.find((layout) => layout.id === result.savedId);
+            setSlotName('');
+            setStatus({
+                kind: 'success',
+                text: `Saved "${saved?.name ?? name}" (${saved?.sectionCount ?? sections.length} sections). Still unpublished.`,
+            });
+        } catch (error) {
+            setStatus({
+                kind: 'error',
+                text: error instanceof Error ? error.message : 'Could not save the layout slot.',
+            });
+        } finally {
+            setSlotBusy(false);
+        }
+    };
+
+    const handleLoadSlot = (layout: HomepageLayoutRecord) => {
+        if (
+            dirty &&
+            !window.confirm(`Load "${layout.name}"? Your unpublished edits will be replaced.`)
+        ) {
+            return;
+        }
+
+        setSections(JSON.parse(JSON.stringify(layout.sections)) as HomepageSection[]);
+        setExpandedId(null);
+        setDirty(true);
+        setPreviewOpen(true);
+        setStatus({
+            kind: 'success',
+            text: `Loaded "${layout.name}" into the editor. Publish to make it live.`,
+        });
+    };
+
+    const handleDeleteSlot = async (layout: HomepageLayoutRecord) => {
+        if (
+            !window.confirm(
+                `Delete the saved layout "${layout.name}"? This does not affect the live homepage.`
+            )
+        ) {
+            return;
+        }
+
+        setSlotBusy(true);
+        try {
+            const result = await deleteHomepageLayout(layout.id);
+            setLayouts(result.layouts);
+            setStatus({ kind: 'success', text: `Deleted "${layout.name}".` });
+        } catch (error) {
+            setStatus({
+                kind: 'error',
+                text: error instanceof Error ? error.message : 'Could not delete the layout slot.',
+            });
+        } finally {
+            setSlotBusy(false);
+        }
+    };
+
     return (
         <div className="space-y-8 pb-24">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -207,6 +325,18 @@ export default function HomepageEditor({
                         <ExternalLink className="h-3.5 w-3.5" />
                         View site
                     </Link>
+                    <button
+                        type="button"
+                        onClick={() => setPreviewOpen((open) => !open)}
+                        className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-[9px] font-black uppercase tracking-[0.16em] transition-colors ${
+                            previewOpen
+                                ? 'border-[#d8a4bc] bg-[#d8a4bc]/15 text-[#0F172A]'
+                                : 'border-gray-200 bg-white text-[#0F172A] hover:border-black'
+                        }`}
+                    >
+                        <Eye className="h-3.5 w-3.5" />
+                        {previewOpen ? 'Hide preview' : 'Preview'}
+                    </button>
                     <button
                         type="button"
                         onClick={resetToDefault}
@@ -238,6 +368,150 @@ export default function HomepageEditor({
                     {status.text}
                 </div>
             )}
+
+            {previewOpen && (
+                <div className="admin-card rounded-2xl p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h2 className="text-sm font-black uppercase tracking-tight text-[#0F172A]">
+                                Draft preview
+                            </h2>
+                            <p
+                                className={`mt-1 text-[10px] font-medium leading-relaxed ${
+                                    draftState === 'error' ? 'text-red-500' : 'text-gray-400'
+                                }`}
+                            >
+                                {draftState === 'saving'
+                                    ? 'Saving draft…'
+                                    : draftState === 'error'
+                                      ? 'Draft autosave failed — the preview may be out of date.'
+                                      : 'Unsaved edits, shown live. The public homepage stays exactly as it is until you publish.'}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
+                                {PREVIEW_DEVICES.map((device) => {
+                                    const DeviceIcon = device.icon;
+                                    return (
+                                        <button
+                                            key={device.id}
+                                            type="button"
+                                            title={device.label}
+                                            onClick={() => setPreviewDevice(device.id)}
+                                            className={`rounded-md p-2 transition-colors ${
+                                                previewDevice === device.id
+                                                    ? 'bg-[#0F172A] text-[#d8a4bc]'
+                                                    : 'text-gray-400 hover:text-black'
+                                            }`}
+                                        >
+                                            <DeviceIcon className="h-4 w-4" />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <a
+                                href="/preview/homepage"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-[9px] font-black uppercase tracking-[0.16em] text-[#0F172A] transition-colors hover:border-black"
+                            >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                Full screen
+                            </a>
+                        </div>
+                    </div>
+
+                    <div
+                        className="mx-auto mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white"
+                        style={{ maxWidth: PREVIEW_DEVICES.find((d) => d.id === previewDevice)?.maxWidth }}
+                    >
+                        <iframe
+                            key={previewVersion}
+                            src="/preview/homepage"
+                            title="Homepage draft preview"
+                            className="h-[70vh] w-full"
+                        />
+                    </div>
+                </div>
+            )}
+
+            <div className="admin-card rounded-2xl p-5">
+                <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#d8a4bc]/15">
+                        <Bookmark className="h-4 w-4 text-[#b9849f]" />
+                    </span>
+                    <div>
+                        <h2 className="text-sm font-black uppercase tracking-tight text-[#0F172A]">
+                            Layout slots
+                        </h2>
+                        <p className="mt-1 text-[10px] font-medium leading-relaxed text-gray-400">
+                            Save the current editor state under a name and load it later. Slots never
+                            change the live site until you publish. Reusing a name overwrites that slot.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <input
+                        className={inputClass}
+                        value={slotName}
+                        onChange={(event) => setSlotName(event.target.value)}
+                        placeholder='e.g. "Drop week 1"'
+                        maxLength={80}
+                    />
+                    <button
+                        type="button"
+                        onClick={handleSaveSlot}
+                        disabled={slotBusy}
+                        className="flex flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0F172A] px-5 py-3 text-[9px] font-black uppercase tracking-[0.16em] text-[#d8a4bc] transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <Save className="h-3.5 w-3.5" />
+                        {slotBusy ? 'Saving…' : 'Save slot'}
+                    </button>
+                </div>
+
+                {layouts.length === 0 ? (
+                    <p className="mt-4 rounded-lg border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-[10px] font-bold uppercase tracking-widest text-gray-300">
+                        No saved slots yet
+                    </p>
+                ) : (
+                    <ul className="mt-4 divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white">
+                        {layouts.map((layout) => (
+                            <li
+                                key={layout.id}
+                                className="flex items-center justify-between gap-3 px-4 py-3"
+                            >
+                                <div className="min-w-0">
+                                    <p className="truncate text-[10px] font-black uppercase tracking-[0.12em] text-[#0F172A]">
+                                        {layout.name}
+                                    </p>
+                                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                                        {layout.sectionCount} sections · {layout.updatedAt.slice(0, 10)}
+                                    </p>
+                                </div>
+                                <div className="flex flex-shrink-0 items-center gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleLoadSlot(layout)}
+                                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.14em] text-gray-600 transition-colors hover:border-black hover:text-black"
+                                    >
+                                        Load
+                                    </button>
+                                    <button
+                                        type="button"
+                                        title="Delete slot"
+                                        onClick={() => handleDeleteSlot(layout)}
+                                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
 
             <div className="admin-card rounded-2xl p-5">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

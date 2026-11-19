@@ -1,11 +1,12 @@
 import { getAdminProducts } from '@/lib/actions/admin';
-import { getHomepageSections } from '@/lib/actions/homepage';
+import { getHomepageSections, listHomepageLayouts } from '@/lib/actions/homepage';
 import HomepageEditor from './HomepageEditor';
 
 export default async function AdminHomepagePage() {
-    const [sections, products] = await Promise.all([
+    const [sections, products, layouts] = await Promise.all([
         getHomepageSections(),
         getAdminProducts(),
+        listHomepageLayouts(),
     ]);
 
     const categories = [
@@ -26,6 +27,7 @@ export default async function AdminHomepagePage() {
     return (
         <HomepageEditor
             initialSections={sections}
+            initialLayouts={layouts}
             products={productOptions}
             categories={categories}
         />

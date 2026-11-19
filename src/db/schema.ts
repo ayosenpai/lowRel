@@ -211,6 +211,27 @@ export const homepageSections = pgTable('homepage_sections', {
     };
 });
 
+// Storefront: unpublished draft of the homepage layout (single row, id = 'current').
+// Only admins can read it (via the preview route) or write it.
+export const homepageDraft = pgTable('homepage_draft', {
+    id: text('id').primaryKey().default('current'),
+    sections: jsonb('sections').$type<Record<string, unknown>[]>().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Storefront: named, reusable homepage layout slots.
+export const homepageLayouts = pgTable('homepage_layouts', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    sections: jsonb('sections').$type<Record<string, unknown>[]>().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        homepageLayoutNameIdx: index('homepage_layout_name_idx').on(table.name),
+    };
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
     orders: many(orders),

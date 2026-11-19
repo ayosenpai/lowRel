@@ -56,6 +56,19 @@ export interface HomepageSection {
     config: HomepageSectionConfig;
 }
 
+/** A named, reusable layout slot shown in the admin editor. */
+export interface HomepageLayoutSummary {
+    id: string;
+    name: string;
+    sectionCount: number;
+    updatedAt: string;
+}
+
+/** A saved layout slot including its full ordered sections. */
+export interface HomepageLayoutRecord extends HomepageLayoutSummary {
+    sections: HomepageSection[];
+}
+
 export const HOMEPAGE_SECTION_TYPES: HomepageSectionType[] = [
     'hero',
     'category-grid',

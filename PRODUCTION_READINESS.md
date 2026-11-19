@@ -91,8 +91,9 @@ without the role, and renders only for the admin account.
 
 ## 5. Database migration
 
-`supabase/migrations/0004_round_ultimo.sql` and
-`supabase/migrations/0005_lucky_hulk.sql` are additive and idempotent.
+`supabase/migrations/0004_round_ultimo.sql`,
+`supabase/migrations/0005_lucky_hulk.sql` and
+`supabase/migrations/0006_clumsy_emma_frost.sql` are additive and idempotent.
 
 0004 creates:
 
@@ -106,12 +107,16 @@ without the role, and renders only for the admin account.
 0005 creates `homepage_sections`, the ordered section list behind
 `/admin/homepage`.
 
+0006 creates `homepage_draft` (one unpublished layout used by the editor
+preview) and `homepage_layouts` (named layout slots).
+
 They have already been applied to the production database. For a fresh
 environment run them before deploying the app:
 
 ```bash
 # psql "$DATABASE_URL" -f supabase/migrations/0004_round_ultimo.sql
 # psql "$DATABASE_URL" -f supabase/migrations/0005_lucky_hulk.sql
+# psql "$DATABASE_URL" -f supabase/migrations/0006_clumsy_emma_frost.sql
 ```
 
 ---
@@ -134,6 +139,25 @@ Only known section types are rendered, and every server action re-checks
 `requireAdmin()` and sanitizes the config. Saving replaces the full ordered
 layout in one transaction and revalidates `/`. If the table is missing or
 empty, the storefront falls back to the original built-in layout.
+
+### Draft preview
+
+Editing never touches the live homepage. Every change is autosaved (debounced)
+to `homepage_draft`, and the editor's **Preview** panel iframes
+`/preview/homepage`, which renders that draft with the real storefront
+components. The route is admin-only, `noindex`, and not linked from the public
+site. Publishing copies the same sections into `homepage_sections` and syncs
+the draft, so preview and live stay identical after a publish.
+
+To verify isolation, change a section without publishing: `/` keeps the old
+layout while `/preview/homepage` shows the new one.
+
+### Layout slots
+
+**Layout slots** save the current editor state under a name in
+`homepage_layouts` (saving an existing name overwrites it). Loading a slot only
+replaces the editor state — it still needs a preview/publish step. Slots never
+affect the live homepage until published.
 
 ---
 
@@ -259,5 +283,7 @@ the deploy that includes `sitemap.ts`.
 7. Newsletter popup/footer and contact form persist rows.
 8. `/admin` is inaccessible without the admin role.
 9. `/admin/homepage` — reorder a section, save, confirm `/` reflects the change.
-10. `/admin/orders` — filter by `paid`, open an order, change status and save;
+10. `/admin/homepage` — edit without publishing, toggle Preview: the draft route
+    shows the change while `/` still shows the published layout.
+11. `/admin/orders` — filter by `paid`, open an order, change status and save;
     confirm the customer's lifetime spend moves with it. Export CSV opens.
