@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { User } from '@supabase/supabase-js'
 import { logout } from '@/app/login/actions'
 import { Mail, User as UserIcon, LogOut, Package, Heart, MapPin } from 'lucide-react'
+import ChangePassword from './ChangePassword'
 
 interface AccountClientProps {
     user: User
@@ -113,6 +114,8 @@ export default function AccountClient({ user }: AccountClientProps) {
                                 </button>
                             </div>
                         </div>
+
+                        <ChangePassword />
 
                         <form action={logout} className="text-center pt-4">
                             <button
