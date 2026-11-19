@@ -10,6 +10,12 @@ import { trackEvent } from '@/lib/actions/analytics';
 import confetti from 'canvas-confetti';
 import { Product } from '@/lib/types';
 import SupabaseImage from '@/components/SupabaseImage';
+import { isComingSoon } from '@/lib/store-config';
+import {
+  COMING_SOON_IMAGE_CLASS,
+  COMING_SOON_LABEL,
+  COMING_SOON_PRICE_LABEL,
+} from '@/components/product-coming-soon';
 
 export default function CartSidebar() {
   const { state, dispatch } = useCart();
@@ -72,6 +78,7 @@ export default function CartSidebar() {
   };
 
   const handleQuickAdd = (product: any) => {
+    if (isComingSoon(product)) return;
     setAddingId(product.id);
 
     // Simulate a small delay for feedback
@@ -223,7 +230,10 @@ export default function CartSidebar() {
               <div className="border-t-[1.5px] border-gray-100 mt-4 p-6 bg-gray-50/50">
                 <h3 className="lowrel-link text-[11px] uppercase tracking-widest mb-8 text-black">Complete The Fit</h3>
                 <div className="grid grid-cols-3 gap-3">
-                  {recommendations.map((product) => (
+                  {recommendations.map((product) => {
+                    const comingSoon = isComingSoon(product);
+
+                    return (
                     <div key={product.id} className="group relative">
                       <div className="aspect-[4/5] relative bg-gray-100 mb-2 overflow-hidden">
                         <SupabaseImage
@@ -231,32 +241,47 @@ export default function CartSidebar() {
                           alt={product.name}
                           fill
                           sizes="(max-width: 420px) 33vw, 150px"
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          className={`object-cover ${comingSoon ? COMING_SOON_IMAGE_CLASS : 'transition-transform duration-500 group-hover:scale-110'}`}
                         />
-                        {/* Quick Add Overlay */}
-                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
-                          <button
-                            onClick={() => handleQuickAdd(product)}
-                            disabled={addingId === product.id}
-                            className="bg-white text-black px-2 py-1.5 text-[7px] font-black uppercase tracking-widest shadow-xl hover:bg-black hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0"
-                          >
-                            {addingId === product.id ? 'Adding...' : 'Quick Add +'}
-                          </button>
-                        </div>
+                        {comingSoon ? (
+                          <span className="absolute top-1 left-1 z-10 bg-black text-white text-[6px] font-bold uppercase tracking-[0.1em] px-1.5 py-0.5">
+                            {COMING_SOON_LABEL}
+                          </span>
+                        ) : (
+                          <>
+                            {/* Quick Add Overlay */}
+                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
+                              <button
+                                onClick={() => handleQuickAdd(product)}
+                                disabled={addingId === product.id}
+                                className="bg-white text-black px-2 py-1.5 text-[7px] font-black uppercase tracking-widest shadow-xl hover:bg-black hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0"
+                              >
+                                {addingId === product.id ? 'Adding...' : 'Quick Add +'}
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                       <h4 className="text-[8px] font-black uppercase tracking-widest truncate leading-tight mb-0.5">{product.name}</h4>
-                      <p className="text-[8px] text-gray-500 font-bold tracking-widest">{product.symbol || '$'} {product.price?.toFixed(2)}</p>
+                      <p className="text-[8px] text-gray-500 font-bold tracking-widest">
+                        {comingSoon
+                          ? COMING_SOON_PRICE_LABEL
+                          : <>{product.symbol || '$'} {product.price?.toFixed(2)}</>}
+                      </p>
 
                       {/* Mobile Visible Button */}
-                      <button
-                        onClick={() => handleQuickAdd(product)}
-                        disabled={addingId === product.id}
-                        className="mt-2 w-full lg:hidden bg-black text-white py-1.5 text-[7px] font-bold uppercase tracking-widest transition-all active:scale-95"
-                      >
-                        {addingId === product.id ? 'Added!' : 'Add to Bag'}
-                      </button>
+                      {!comingSoon && (
+                        <button
+                          onClick={() => handleQuickAdd(product)}
+                          disabled={addingId === product.id}
+                          className="mt-2 w-full lg:hidden bg-black text-white py-1.5 text-[7px] font-bold uppercase tracking-widest transition-all active:scale-95"
+                        >
+                          {addingId === product.id ? 'Added!' : 'Add to Bag'}
+                        </button>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

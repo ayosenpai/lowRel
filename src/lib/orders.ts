@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { eq, inArray, and, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { products, orders, orderItems, customers } from '@/db/schema';
+import { isComingSoon } from '@/lib/store-config';
 
 /** Server-side source of truth for discounts (never trust the client). */
 export const DISCOUNT_CODES: Record<string, number> = {
@@ -62,6 +63,12 @@ export async function computeOrderTotals(
         const product = byId.get(String(item.id));
         if (!product) {
             throw new OrderValidationError(`Product not available: ${item.id}`);
+        }
+
+        // Coming-soon categories are display-only. Enforce it here so a tampered
+        // cart can never create a payable order for them.
+        if (isComingSoon(product)) {
+            throw new OrderValidationError(`${product.name} is not available for purchase yet`);
         }
 
         const quantity = Math.floor(Number(item.quantity));

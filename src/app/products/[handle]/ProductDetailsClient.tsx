@@ -14,6 +14,12 @@ import SkeletonLoader from "@/components/ui/skeleton-loader";
 import CompleteTheLook from "@/components/sections/complete-the-look";
 import ProductReviews from "@/components/sections/product-reviews";
 import SupabaseImage from "@/components/SupabaseImage";
+import { isComingSoon } from "@/lib/store-config";
+import {
+    COMING_SOON_IMAGE_CLASS,
+    COMING_SOON_LABEL,
+    COMING_SOON_PRICE_LABEL,
+} from "@/components/product-coming-soon";
 
 export default function ProductDetailsClient({ product, relatedProducts }: { product: any; relatedProducts?: any[] }) {
     const router = useRouter();
@@ -25,8 +31,10 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isZoomed, setIsZoomed] = useState(false);
+    const comingSoon = isComingSoon(product);
 
     const openLightbox = (index: number) => {
+        if (comingSoon) return;
         setCurrentImageIndex(index);
         setIsLightboxOpen(true);
         setIsZoomed(false);
@@ -100,6 +108,8 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     const [isAdding, setIsAdding] = useState(false);
 
     const handleAddToBag = () => {
+        if (comingSoon) return;
+
         if (!selectedSize) {
             alert('Please select a size');
             return;
@@ -154,7 +164,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                         <AnimatePresence initial={false} custom={currentImageIndex}>
                             <motion.div
                                 key={currentImageIndex}
-                                className="relative w-full h-full cursor-zoom-in"
+                                className={`relative w-full h-full ${comingSoon ? 'cursor-default' : 'cursor-zoom-in'}`}
                                 onClick={() => openLightbox(currentImageIndex)}
                                 initial={{ x: 300, opacity: 0 }}
                                 animate={{ x: 0, opacity: 1 }}
@@ -177,13 +187,21 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                                     src={product.images?.[currentImageIndex] || ''}
                                     alt={`${product.name} - ${currentImageIndex + 1}`}
                                     fill
-                                    className="object-cover"
+                                    className={`object-cover ${comingSoon ? COMING_SOON_IMAGE_CLASS : ''}`}
                                     sizes="(max-width: 768px) 100vw, 50vw"
                                     priority
                                     onLoad={() => setImageLoaded(prev => ({ ...prev, [currentImageIndex]: true }))}
                                 />
                             </motion.div>
                         </AnimatePresence>
+
+                        {comingSoon && (
+                            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-4">
+                                <span className="bg-black/90 text-white text-[10px] md:text-xs font-bold uppercase tracking-[0.24em] px-4 py-2 text-center">
+                                    {COMING_SOON_LABEL}
+                                </span>
+                            </div>
+                        )}
 
                         <button
                             onClick={handleToggleWishlist}
@@ -221,58 +239,86 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                             <h1 className="text-2xl lg:text-4xl font-bold uppercase tracking-[0.01em] mb-1 text-center">
                                 {product.name}
                             </h1>
-                            <div className="flex items-center justify-center gap-4">
-                                <span className={`text-xl font-bold tracking-[.009em] ${product.isSale ? 'text-[#ff69b4]' : ''}`}>
-                                    {product.symbol} {product.price.toFixed(2)}
-                                </span>
-                                {product.compareAtPrice && (
-                                    <span className="text-gray-400 line-through text-lg">
-                                        {product.symbol} {product.compareAtPrice.toFixed(2)}
+                            {comingSoon ? (
+                                <div className="flex flex-col items-center gap-1">
+                                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">
+                                        {COMING_SOON_PRICE_LABEL}
                                     </span>
-                                )}
-                            </div>
+                                    <span className="inline-flex items-center bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1">
+                                        {COMING_SOON_LABEL}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center gap-4">
+                                    <span className={`text-xl font-bold tracking-[.009em] ${product.isSale ? 'text-[#ff69b4]' : ''}`}>
+                                        {product.symbol} {product.price.toFixed(2)}
+                                    </span>
+                                    {product.compareAtPrice && (
+                                        <span className="text-gray-400 line-through text-lg">
+                                            {product.symbol} {product.compareAtPrice.toFixed(2)}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="border-t border-gray-200 pt-3">
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-xs font-bold uppercase tracking-widest">Select Size</span>
-                                <button className="text-[10px] uppercase tracking-widest underline decoration-gray-300 hover:text-black transition-colors">Size Guide</button>
+                        {comingSoon ? (
+                            <div className="border border-black bg-black/[0.03] p-6 text-center space-y-2">
+                                <p className="text-sm font-black uppercase tracking-[0.2em]">{COMING_SOON_LABEL}</p>
+                                <p className="text-[11px] uppercase tracking-[0.14em] text-gray-600">
+                                    This piece is not on sale yet. Accessories are available now.
+                                </p>
+                                <Link
+                                    href="/collections/accessories"
+                                    className="inline-block mt-2 border border-black px-6 py-3 text-[10px] font-black uppercase tracking-[0.18em] hover:bg-black hover:text-white transition-colors"
+                                >
+                                    Shop Accessories
+                                </Link>
                             </div>
-                            <div className="grid grid-cols-4 gap-2">
-                                {['XS', 'S', 'M', 'L'].map((size) => (
+                        ) : (
+                            <>
+                                <div className="border-t border-gray-200 pt-3">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="text-xs font-bold uppercase tracking-widest">Select Size</span>
+                                        <button className="text-[10px] uppercase tracking-widest underline decoration-gray-300 hover:text-black transition-colors">Size Guide</button>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {['XS', 'S', 'M', 'L'].map((size) => (
+                                            <button
+                                                key={size}
+                                                onClick={() => setSelectedSize(size)}
+                                                className={`h-12 border transition-all duration-300 flex items-center justify-center text-sm font-medium hover:scale-105 active:scale-95 ${selectedSize === size
+                                                    ? 'border-black bg-black text-[#d8a4bc] shadow-md'
+                                                    : 'border-gray-200 hover:border-black hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                </div>
+
+                                <div className="space-y-3">
                                     <button
-                                        key={size}
-                                        onClick={() => setSelectedSize(size)}
-                                        className={`h-12 border transition-all duration-300 flex items-center justify-center text-sm font-medium hover:scale-105 active:scale-95 ${selectedSize === size
-                                            ? 'border-black bg-black text-[#d8a4bc] shadow-md'
-                                            : 'border-gray-200 hover:border-black hover:shadow-sm'
-                                            }`}
+                                        onClick={handleAddToBag}
+                                        disabled={isAdding}
+                                        className="relative w-full bg-[#d8a4bc] text-black h-14 uppercase font-bold tracking-[0.2em] text-sm hover:bg-black hover:text-[#d8a4bc] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-[0.99]"
                                     >
-                                        {size}
+                                        {isAdding ? (
+                                            <span
+                                                className="flex items-center justify-center gap-2"
+                                            >
+                                                <span
+                                                    className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-[9999px] animate-spin"
+                                                />
+                                                Adding...
+                                            </span>
+                                        ) : 'Add to Bag'}
                                     </button>
-                                ))}
-                            </div>
-
-                        </div>
-
-                        <div className="space-y-3">
-                            <button
-                                onClick={handleAddToBag}
-                                disabled={isAdding}
-                                className="relative w-full bg-[#d8a4bc] text-black h-14 uppercase font-bold tracking-[0.2em] text-sm hover:bg-black hover:text-[#d8a4bc] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-[0.99]"
-                            >
-                                {isAdding ? (
-                                    <span
-                                        className="flex items-center justify-center gap-2"
-                                    >
-                                        <span
-                                            className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-[9999px] animate-spin"
-                                        />
-                                        Adding...
-                                    </span>
-                                ) : 'Add to Bag'}
-                            </button>
-                        </div>
+                                </div>
+                            </>
+                        )}
 
 
                         <div className="space-y-4 pt-6">
@@ -304,7 +350,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
                 {/* Lightbox Modal */}
                 <AnimatePresence>
-                    {isLightboxOpen && (
+                    {isLightboxOpen && !comingSoon && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}

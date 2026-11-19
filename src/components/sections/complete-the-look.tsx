@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import SupabaseImage from "@/components/SupabaseImage";
+import { isComingSoon } from "@/lib/store-config";
+import {
+    COMING_SOON_IMAGE_CLASS,
+    COMING_SOON_LABEL,
+    COMING_SOON_PRICE_LABEL,
+} from "@/components/product-coming-soon";
 
 interface Product {
     id: string;
@@ -34,7 +40,10 @@ export default function CompleteTheLook({ products, currentProductId }: Complete
             <h2 className="text-2xl font-bold uppercase tracking-tight mb-6">Complete the Look</h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {relatedProducts.map((product) => (
+                {relatedProducts.map((product) => {
+                    const comingSoon = isComingSoon(product);
+
+                    return (
                     <div key={product.id}>
                         <Link href={`/products/${product.handle}`} className="group block">
                             <div className="aspect-[3/4] relative bg-gray-100 overflow-hidden mb-3">
@@ -51,11 +60,17 @@ export default function CompleteTheLook({ products, currentProductId }: Complete
                                             src={product.images[0]}
                                             alt={product.name}
                                             fill
-                                            className="object-cover"
+                                            className={`object-cover ${comingSoon ? COMING_SOON_IMAGE_CLASS : ''}`}
                                             sizes="(max-width: 768px) 50vw, 25vw"
                                             onLoad={() => setImageLoaded(prev => ({ ...prev, [product.id]: true }))}
                                         />
                                     </div>
+                                )}
+
+                                {comingSoon && (
+                                    <span className="absolute top-2 left-2 z-10 bg-black text-white text-[9px] md:text-[10px] font-bold uppercase tracking-[0.18em] px-2 py-1">
+                                        {COMING_SOON_LABEL}
+                                    </span>
                                 )}
                             </div>
 
@@ -67,14 +82,17 @@ export default function CompleteTheLook({ products, currentProductId }: Complete
                                 <p className="text-xs text-gray-500 uppercase tracking-wider">
                                     {product.category}
                                 </p>
-                                <p className="text-sm font-bold">
-                                    {product.symbol}{product.price.toFixed(2)}
+                                <p className={`text-sm font-bold ${comingSoon ? 'text-gray-500 uppercase text-[11px] tracking-widest' : ''}`}>
+                                    {comingSoon
+                                        ? COMING_SOON_PRICE_LABEL
+                                        : `${product.symbol}${product.price.toFixed(2)}`}
                                 </p>
                             </div>
                         </Link>
                     </div>
 
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

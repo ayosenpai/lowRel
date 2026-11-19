@@ -3,6 +3,11 @@
 import Link from "next/link";
 import SupabaseImage from "@/components/SupabaseImage";
 import type { Product } from "@/lib/types";
+import { isComingSoon } from "@/lib/store-config";
+import {
+  COMING_SOON_IMAGE_CLASS,
+  COMING_SOON_LABEL,
+} from "@/components/product-coming-soon";
 
 export default function BraceletCarousel({ products = [] }: { products?: Product[] }) {
   if (products.length === 0) return null;
@@ -24,10 +29,15 @@ export default function BraceletCarousel({ products = [] }: { products?: Product
                 src={product.images[0]}
                 alt={product.name}
                 fill
-                className="object-cover"
+                className={`object-cover ${isComingSoon(product) ? COMING_SOON_IMAGE_CLASS : ''}`}
                 sizes="(max-width: 768px) 47vw, (max-width: 1024px) 33vw, 25vw"
                 loading="lazy"
               />
+              {isComingSoon(product) && (
+                <span className="absolute top-3 left-3 z-10 bg-black text-white text-[9px] md:text-[10px] font-bold uppercase tracking-[0.18em] px-2 py-1">
+                  {COMING_SOON_LABEL}
+                </span>
+              )}
             </div>
           </Link>
         ))}

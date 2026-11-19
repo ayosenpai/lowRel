@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useReducer, ReactNode, useState, useEffect } from 'react';
 import { Product } from '@/lib/types';
+import { isComingSoon } from '@/lib/store-config';
 
 export interface CartItem extends Product {
   quantity: number;
@@ -33,6 +34,12 @@ const initialState: CartState = {
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_TO_CART': {
+      // Coming-soon categories can never enter the cart, even if a component
+      // forgets to disable its own add button.
+      if (isComingSoon(action.payload.product)) {
+        return state;
+      }
+
       const existingItem = state.items.find(item => item.id === action.payload.product.id);
       let newItems;
 
@@ -85,12 +92,15 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'CLEAR_CART':
       return { ...state, items: [], total: 0 };
 
-    case 'SET_CART':
+    case 'SET_CART': {
+      // Drop legacy cart entries for products that are no longer purchasable.
+      const items = action.payload.filter((item) => !isComingSoon(item));
       return {
         ...state,
-        items: action.payload,
-        total: action.payload.reduce((sum, item) => sum + ((item.price ?? 0) * item.quantity), 0),
+        items,
+        total: items.reduce((sum, item) => sum + ((item.price ?? 0) * item.quantity), 0),
       };
+    }
 
     default:
       return state;

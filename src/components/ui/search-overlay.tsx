@@ -8,6 +8,12 @@ import Link from 'next/link';
 import { getProducts } from '@/lib/actions/products';
 import { track } from '@/lib/analytics-client';
 import SupabaseImage from '@/components/SupabaseImage';
+import { isComingSoon } from '@/lib/store-config';
+import {
+    COMING_SOON_IMAGE_CLASS,
+    COMING_SOON_LABEL,
+    COMING_SOON_PRICE_LABEL,
+} from '@/components/product-coming-soon';
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -127,27 +133,40 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                             <div className="space-y-4">
                                                 <p className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Products</p>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                                                    {results.map((product) => (
+                                                    {results.map((product) => {
+                                                        const comingSoon = isComingSoon(product);
+
+                                                        return (
                                                         <Link
                                                             key={product.id}
                                                             href={`/products/${product.handle}`}
                                                             onClick={onClose}
                                                             className="flex items-center gap-4 p-2 hover:bg-gray-50 transition-colors group"
                                                         >
-                                                            <div className="relative w-12 aspect-[3/4] bg-gray-100 flex-shrink-0">
+                                                            <div className="relative w-12 aspect-[3/4] bg-gray-100 flex-shrink-0 overflow-hidden">
                                                                 <SupabaseImage
                                                                     src={product.images[0]}
                                                                     alt={product.name}
                                                                     fill
-                                                                    className="object-cover"
+                                                                    className={`object-cover ${comingSoon ? COMING_SOON_IMAGE_CLASS : ''}`}
                                                                 />
+                                                                {comingSoon && (
+                                                                    <span className="absolute inset-x-0 bottom-0 bg-black/85 text-white text-[6px] font-bold uppercase tracking-[0.1em] text-center py-0.5">
+                                                                        {COMING_SOON_LABEL}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <h4 className="text-xs font-bold uppercase truncate group-hover:text-black">{product.name}</h4>
-                                                                <p className="text-[10px] text-gray-500">{product.symbol || 'Rs.'} {product.price?.toFixed(2)}</p>
+                                                                <p className={`text-[10px] ${comingSoon ? 'text-gray-400 uppercase tracking-wide' : 'text-gray-500'}`}>
+                                                                    {comingSoon
+                                                                        ? COMING_SOON_PRICE_LABEL
+                                                                        : <>{product.symbol || 'Rs.'} {product.price?.toFixed(2)}</>}
+                                                                </p>
                                                             </div>
                                                         </Link>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                                 <Link
                                                     href={`/collections/all?q=${query}`}

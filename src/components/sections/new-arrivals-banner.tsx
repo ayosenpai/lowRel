@@ -3,6 +3,12 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import SupabaseImage from "@/components/SupabaseImage";
+import { isComingSoon } from "@/lib/store-config";
+import {
+  COMING_SOON_IMAGE_CLASS,
+  COMING_SOON_LABEL,
+  COMING_SOON_PRICE_LABEL,
+} from "@/components/product-coming-soon";
 
 const REPEATS = 3;
 
@@ -69,37 +75,47 @@ export default function NewArrivalsBanner({
                 className="flex gap-4 flex-shrink-0"
                 aria-hidden={!isReal}
               >
-                {products.map((product, index) => (
-                  <Link
-                    key={product.id}
-                    href={`/products/${product.handle}`}
-                    tabIndex={isReal ? undefined : -1}
-                    className="group flex-shrink-0 w-[200px]"
-                    draggable={false}
-                  >
-                    <div className="relative aspect-[3/5] overflow-hidden bg-[#111111]">
-                      <SupabaseImage
-                        src={product.images?.[0]}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        sizes="200px"
-                        loading={isReal && index < 8 ? "eager" : "lazy"}
-                      />
-                    </div>
+                {products.map((product, index) => {
+                  const comingSoon = isComingSoon(product);
 
-                    <div className="mt-3">
-                      <p className="truncate text-[12px] font-bold uppercase tracking-[0.15em] text-black">
-                        {product.name}
-                      </p>
+                  return (
+                    <Link
+                      key={product.id}
+                      href={`/products/${product.handle}`}
+                      tabIndex={isReal ? undefined : -1}
+                      className="group flex-shrink-0 w-[200px]"
+                      draggable={false}
+                    >
+                      <div className="relative aspect-[3/5] overflow-hidden bg-[#111111]">
+                        <SupabaseImage
+                          src={product.images?.[0]}
+                          alt={product.name}
+                          fill
+                          className={`object-cover ${comingSoon ? COMING_SOON_IMAGE_CLASS : 'transition-transform duration-500 group-hover:scale-105'}`}
+                          sizes="200px"
+                          loading={isReal && index < 8 ? "eager" : "lazy"}
+                        />
+                        {comingSoon && (
+                          <span className="absolute top-2 left-2 z-10 bg-black text-white text-[9px] font-bold uppercase tracking-[0.16em] px-2 py-1">
+                            {COMING_SOON_LABEL}
+                          </span>
+                        )}
+                      </div>
 
-                      <p className="text-[12px] font-bold tracking-[0.1em] text-black/60">
-                        {product.symbol || "$"}{" "}
-                        {product.price?.toFixed(2)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+                      <div className="mt-3">
+                        <p className="truncate text-[12px] font-bold uppercase tracking-[0.15em] text-black">
+                          {product.name}
+                        </p>
+
+                        <p className={`text-[12px] font-bold tracking-[0.1em] ${comingSoon ? 'text-black/50 uppercase' : 'text-black/60'}`}>
+                          {comingSoon
+                            ? COMING_SOON_PRICE_LABEL
+                            : <>{product.symbol || "$"} {product.price?.toFixed(2)}</>}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             );
           })}

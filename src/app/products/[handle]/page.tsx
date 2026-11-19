@@ -12,6 +12,7 @@ import ProductDetailsClient from "./ProductDetailsClient";
 import ProductSchema from "@/components/seo/product-schema";
 import BreadcrumbSchema from "@/components/seo/breadcrumb-schema";
 import { getReviewStats } from "@/lib/actions/reviews";
+import { isComingSoon } from "@/lib/store-config";
 import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }): Promise<Metadata> {
@@ -35,7 +36,9 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
   const currency = isIndia ? 'INR' : 'USD';
 
   const title = `${product.name} | Low Religion — Minimalist Streetwear`;
-  const description = `${product.description || `Premium ${product.category} in ${product.name}`}. ${symbol}${price.toFixed(2)}. Available in multiple sizes. Free shipping on orders over ${symbol}${isIndia ? '5,000' : '100'}.`;
+  const description = isComingSoon(product)
+    ? `${product.description || `Premium ${product.category} in ${product.name}`}. Dropping soon at Low Religion.`
+    : `${product.description || `Premium ${product.category} in ${product.name}`}. ${symbol}${price.toFixed(2)}. Available in multiple sizes. Free shipping on orders over ${symbol}${isIndia ? '5,000' : '100'}.`;
 
   return {
     title,
@@ -110,7 +113,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
 
   return (
     <main className="min-h-screen bg-white text-black pt-[94px]">
-      <ProductSchema product={{ ...product, reviewStats }} />
+      <ProductSchema product={{ ...product, reviewStats }} comingSoon={isComingSoon(product)} />
       <BreadcrumbSchema
         items={[
           { name: 'Home', item: '/' },

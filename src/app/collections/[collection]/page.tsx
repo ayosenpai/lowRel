@@ -6,6 +6,12 @@ import Header from '@/components/sections/header';
 import Footer from '@/components/sections/footer';
 import { getProducts } from '@/lib/actions/products';
 import { notFound } from 'next/navigation';
+import { isComingSoon } from '@/lib/store-config';
+import {
+    COMING_SOON_IMAGE_CLASS,
+    COMING_SOON_LABEL,
+    COMING_SOON_PRICE_LABEL,
+} from '@/components/product-coming-soon';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -71,42 +77,60 @@ export default async function CollectionPage({ params, searchParams }: {
                 ) : (
                     <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-1 gap-y-10">
-                            {displayProducts.map((product) => (
-                                <Link key={product.id} href={`/products/${product.handle}`} className="group block">
-                                    <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden mb-4">
-                                        <SupabaseImage
-                                            src={product.images?.[0] || ''}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                            sizes="(max-width: 768px) 50vw, 25vw"
-                                        />
-                                        {product.isSale && (
-                                            <span className="absolute top-2 left-2 bg-[#ff69b4] text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
-                                                Sale
-                                            </span>
-                                        )}
-                                        {product.isNew && !product.isSale && (
-                                            <span className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
-                                                New
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h3 className="text-xs md:text-sm font-bold uppercase tracking-wide truncate pr-4">{product.name}</h3>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-xs md:text-sm font-bold ${product.isSale ? 'text-[#ff69b4]' : 'text-black'}`}>
-                                                {product.symbol} {product.price?.toFixed(2)}
-                                            </span>
-                                            {product.compareAtPrice && (
-                                                <span className="text-xs text-gray-400 line-through">
-                                                    {product.symbol} {product.compareAtPrice.toFixed(2)}
+                            {displayProducts.map((product) => {
+                                const comingSoon = isComingSoon(product);
+
+                                return (
+                                    <Link key={product.id} href={`/products/${product.handle}`} className="group block">
+                                        <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden mb-4">
+                                            <SupabaseImage
+                                                src={product.images?.[0] || ''}
+                                                alt={product.name}
+                                                fill
+                                                className={`object-cover ${comingSoon ? COMING_SOON_IMAGE_CLASS : 'transition-transform duration-500 group-hover:scale-105'}`}
+                                                sizes="(max-width: 768px) 50vw, 25vw"
+                                            />
+                                            {comingSoon ? (
+                                                <span className="absolute top-2 left-2 z-20 bg-black text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                                                    {COMING_SOON_LABEL}
                                                 </span>
+                                            ) : (
+                                                <>
+                                                    {product.isSale && (
+                                                        <span className="absolute top-2 left-2 bg-[#ff69b4] text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                                                            Sale
+                                                        </span>
+                                                    )}
+                                                    {product.isNew && !product.isSale && (
+                                                        <span className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                                                            New
+                                                        </span>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
-                                    </div>
-                                </Link>
-                            ))}
+                                        <div className="space-y-1">
+                                            <h3 className="text-xs md:text-sm font-bold uppercase tracking-wide truncate pr-4">{product.name}</h3>
+                                            {comingSoon ? (
+                                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] text-gray-500">
+                                                    {COMING_SOON_PRICE_LABEL}
+                                                </p>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-xs md:text-sm font-bold ${product.isSale ? 'text-[#ff69b4]' : 'text-black'}`}>
+                                                        {product.symbol} {product.price?.toFixed(2)}
+                                                    </span>
+                                                    {product.compareAtPrice && (
+                                                        <span className="text-xs text-gray-400 line-through">
+                                                            {product.symbol} {product.compareAtPrice.toFixed(2)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
 
                         {/* Pagination */}

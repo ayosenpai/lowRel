@@ -23,10 +23,21 @@ Canonical domain: **https://lowreligion.com** (apex 308 → `www`, both serve).
    | `RAZORPAY_KEY_SECRET` | yes | **server-only** |
    | `RAZORPAY_WEBHOOK_SECRET` | yes | new — webhook returns 503 until set |
    | `NEXT_PUBLIC_SITE_URL` | yes | `https://lowreligion.com` |
+   | `NEXT_PUBLIC_SELLABLE_CATEGORIES` | optional | defaults to `Accessories`; all other categories are coming-soon |
+   | `NEXT_PUBLIC_COMING_SOON_LABEL` | optional | defaults to `DROPPING SOON` |
+   | `NEXT_PUBLIC_COMING_SOON_PRICE_LABEL` | optional | defaults to `Price revealed at drop` |
    | `NEXT_PUBLIC_GA_ID` | optional | defaults to `G-L9NZEQMD9F` |
    | `GOOGLE_SITE_VERIFICATION` | optional | blank = no verification meta tag |
 
 3. Redeploy after adding/changing env vars (they are read at build + runtime).
+
+### Coming-soon merchandising
+
+Only categories listed in `NEXT_PUBLIC_SELLABLE_CATEGORIES` can be bought. Every
+other product is displayed with a subtle blur, no price, and the badge from
+`NEXT_PUBLIC_COMING_SOON_LABEL`; checkout rejects those items server-side. When
+the clothing drop goes live, add its category to the comma-separated list and
+redeploy. Because these are `NEXT_PUBLIC_*`, a fresh build is required.
 
 ---
 

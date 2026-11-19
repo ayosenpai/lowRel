@@ -17,9 +17,10 @@ interface ProductSchemaProps {
             totalCount: number;
         };
     };
+    comingSoon?: boolean;
 }
 
-export default function ProductSchema({ product }: ProductSchemaProps) {
+export default function ProductSchema({ product, comingSoon = false }: ProductSchemaProps) {
     const schema: any = {
         '@context': 'https://schema.org',
         '@type': 'Product',
@@ -30,7 +31,13 @@ export default function ProductSchema({ product }: ProductSchemaProps) {
             '@type': 'Brand',
             name: 'Low Religion',
         },
-        offers: {
+        category: product.category,
+    };
+
+    // Coming-soon pieces are not purchasable, so they must not advertise a
+    // price or an availability that search engines could surface.
+    if (!comingSoon) {
+        schema.offers = {
             '@type': 'Offer',
             url: `https://lowreligion.com/products/${product.handle}`,
             priceCurrency: product.currency,
@@ -38,9 +45,8 @@ export default function ProductSchema({ product }: ProductSchemaProps) {
             priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
             availability: `https://schema.org/${product.availability || 'InStock'}`,
             itemCondition: 'https://schema.org/NewCondition',
-        },
-        category: product.category,
-    };
+        };
+    }
 
     if (product.reviewStats && product.reviewStats.totalCount > 0) {
         schema.aggregateRating = {

@@ -11,6 +11,12 @@ import { createClient } from '@/lib/supabase/client';
 import { login } from '@/app/login/actions';
 import SupabaseImage from '@/components/SupabaseImage';
 import { useRouter } from 'next/navigation';
+import { isComingSoon } from '@/lib/store-config';
+import {
+    COMING_SOON_IMAGE_CLASS,
+    COMING_SOON_LABEL,
+    COMING_SOON_PRICE_LABEL,
+} from '@/components/product-coming-soon';
 
 export default function WishlistPage() {
     const { state, dispatch } = useWishlist();
@@ -133,7 +139,10 @@ export default function WishlistPage() {
                 {state.items.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         <AnimatePresence mode="popLayout">
-                            {state.items.map((product) => (
+                            {state.items.map((product) => {
+                                const comingSoon = isComingSoon(product);
+
+                                return (
                                 <motion.div
                                     key={product.id}
                                     layout
@@ -155,20 +164,26 @@ export default function WishlistPage() {
                                                 src={product.images[0]}
                                                 alt={product.name}
                                                 fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                                className={`object-cover ${comingSoon ? COMING_SOON_IMAGE_CLASS : 'transition-transform duration-500 group-hover:scale-105'}`}
                                             />
-                                            {product.isSale && (
+                                            {comingSoon ? (
+                                                <div className="absolute top-2 left-2 bg-black text-white text-[10px] font-black px-2 py-1 uppercase">
+                                                    {COMING_SOON_LABEL}
+                                                </div>
+                                            ) : product.isSale ? (
                                                 <div className="absolute top-2 left-2 bg-[#ff69b4] text-black text-[10px] font-black px-2 py-1 uppercase">
                                                     Sale
                                                 </div>
-                                            )}
+                                            ) : null}
                                         </div>
                                         <div className="space-y-1 text-center">
                                             <h3 className="text-xs font-black uppercase tracking-widest truncate">
                                                 {product.name}
                                             </h3>
-                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
-                                                {product.symbol || '$'} {product.price?.toFixed(2)}
+                                            <p className={`text-xs font-bold uppercase tracking-widest ${comingSoon ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                {comingSoon
+                                                    ? COMING_SOON_PRICE_LABEL
+                                                    : <>{product.symbol || '$'} {product.price?.toFixed(2)}</>}
                                             </p>
                                         </div>
                                     </Link>
@@ -178,10 +193,11 @@ export default function WishlistPage() {
                                         className="w-full mt-4 border border-black py-2 text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2"
                                     >
                                         <ShoppingBag className="w-3 h-3" />
-                                        Select Options
+                                        {comingSoon ? COMING_SOON_LABEL : 'Select Options'}
                                     </button>
                                 </motion.div>
-                            ))}
+                                );
+                            })}
                         </AnimatePresence>
                     </div>
                 ) : (
