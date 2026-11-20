@@ -1,14 +1,10 @@
 import { headers } from 'next/headers';
 import { createHmac, timingSafeEqual } from 'crypto';
-import { eq, inArray, and, sql } from 'drizzle-orm';
+import { eq, inArray, and, sql, isNull, lt, or } from 'drizzle-orm';
 import { db } from '@/db';
-import { products, orders, orderItems, customers } from '@/db/schema';
+import { products, orders, orderItems, customers, coupons } from '@/db/schema';
 import { isComingSoon } from '@/lib/store-config';
-
-/** Server-side source of truth for discounts (never trust the client). */
-export const DISCOUNT_CODES: Record<string, number> = {
-    MATTERBABY: 0.15,
-};
+import { validateCouponCode } from '@/lib/actions/coupons';
 
 export interface OrderItemInput {
     id: string;
@@ -21,6 +17,8 @@ export interface ComputedOrder {
     subtotal: number; // smallest unit (paise / cents)
     discountAmount: number; // smallest unit
     total: number; // smallest unit
+    discountCode: string | null;
+    discountRate: number; // 0..1
     lines: {
         productId: string;
         productName: string;
@@ -88,7 +86,9 @@ export async function computeOrderTotals(
         });
     }
 
-    const rate = discountCode ? DISCOUNT_CODES[discountCode.toUpperCase().trim()] ?? 0 : 0;
+    const validated = await validateCouponCode(discountCode || '');
+    const rate = validated.valid ? validated.rate ?? 0 : 0;
+    const appliedCode = validated.valid ? validated.code ?? null : null;
     const discountAmount = Math.round(subtotal * rate);
 
     return {
@@ -96,6 +96,8 @@ export async function computeOrderTotals(
         subtotal,
         discountAmount,
         total: Math.max(0, subtotal - discountAmount),
+        discountCode: appliedCode,
+        discountRate: rate,
         lines,
     };
 }
@@ -110,6 +112,7 @@ export async function createPendingOrder(params: {
     amount: number;
     currency: string;
     customerId: string | null;
+    discountCode?: string | null;
     shippingAddress: Record<string, unknown> | null;
     lines: ComputedOrder['lines'];
 }): Promise<string> {
@@ -124,6 +127,7 @@ export async function createPendingOrder(params: {
                 totalAmount: params.amount,
                 currency: params.currency,
                 status: 'pending',
+                discountCode: params.discountCode ?? null,
                 shippingAddress: params.shippingAddress,
             })
             .returning({ id: orders.id });
@@ -204,6 +208,21 @@ export async function markOrderPaid(
                     lastSeenAt: new Date(),
                 })
                 .where(eq(customers.id, order.customerId));
+        }
+
+        if (order.discountCode) {
+            await tx
+                .update(coupons)
+                .set({
+                    usedCount: sql`${coupons.usedCount} + 1`,
+                    updatedAt: new Date(),
+                })
+                .where(
+                    and(
+                        eq(coupons.code, order.discountCode),
+                        or(isNull(coupons.maxUses), lt(coupons.usedCount, coupons.maxUses))
+                    )
+                );
         }
 
         return { updated: true, missing: false, order };

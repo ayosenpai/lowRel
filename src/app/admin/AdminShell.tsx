@@ -15,6 +15,7 @@ import {
     Search,
     LayoutTemplate,
     ShoppingBag,
+    TicketPercent,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -58,6 +59,7 @@ export default function AdminShell({ email, children }: { email: string; childre
             items: [
                 { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
                 { name: 'Products', href: '/admin/products', icon: Package },
+                { name: 'Coupons', href: '/admin/coupons', icon: TicketPercent },
                 { name: 'Customers', href: '/admin/customers', icon: Users },
             ]
         },

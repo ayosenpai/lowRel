@@ -70,6 +70,7 @@ export const orders = pgTable('orders', {
     status: text('status').default('pending'), // pending, paid, failed, shipped
     paymentId: text('payment_id'), // Razorpay Payment ID
     orderId: text('razorpay_order_id'), // Razorpay Order ID
+    discountCode: text('discount_code'),
     shippingAddress: jsonb('shipping_address'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -182,6 +183,26 @@ export const newsletterSubscribers = pgTable('newsletter_subscribers', {
     source: text('source').default('popup'), // popup | footer | checkout
     userId: uuid('user_id'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Marketing: discount coupons
+export const coupons = pgTable('coupons', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    code: text('code').notNull().unique(),
+    description: text('description'),
+    type: text('type').notNull().default('percent'), // percent
+    value: integer('value').notNull(), // percent value, e.g. 15
+    isActive: boolean('is_active').notNull().default(true),
+    startsAt: timestamp('starts_at'),
+    expiresAt: timestamp('expires_at'),
+    maxUses: integer('max_uses'),
+    usedCount: integer('used_count').notNull().default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        couponCodeIdx: index('coupon_code_idx').on(table.code),
+    };
 });
 
 // Support: contact form messages

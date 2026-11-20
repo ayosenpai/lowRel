@@ -154,15 +154,15 @@ export default async function CollectionPage({ params, searchParams }: {
 // Helper for display titles
 const getCollectionTitle = (collection: string) => {
     switch (collection) {
-        case 'new-in': return 'New Arrivals';
+        case 'new-in': return 'Latest Arrivals';
         case 'sale': return 'Sale';
-        case 'tops': return 'Tops & Tees';
-        case 'tops-tees': return 'Tops & Tees';
+        case 'tops': return 'Tops/Upperwear';
+        case 'tops-tees': return 'Tops/Upperwear';
         case 'bottoms': return 'Bottoms';
         case 'sweatshirts-hoodies': return 'Sweatshirts & Hoodies';
-        case 'accessories': return 'Accessories';
+        case 'accessories': return 'Accessory Arrival';
         case 'outerwear': return 'Outerwear';
-        case 'all': return 'All Products';
+        case 'all': return 'Shop All';
         default: return collection.replace(/-/g, ' ');
     }
 };

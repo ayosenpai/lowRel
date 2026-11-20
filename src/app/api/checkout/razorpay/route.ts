@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
             amount: totals.total,
             currency: totals.currency,
             customerId,
+            discountCode: totals.discountCode ?? null,
             shippingAddress: shippingAddress ?? null,
             lines: totals.lines,
         });

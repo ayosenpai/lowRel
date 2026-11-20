@@ -50,6 +50,20 @@
       "when": 1795058458738,
       "tag": "0006_clumsy_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795062000000,
+      "tag": "0007_add_coupons",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795065600000,
+      "tag": "0008_add_order_discount_code",
+      "breakpoints": true
     }
   ]
 }

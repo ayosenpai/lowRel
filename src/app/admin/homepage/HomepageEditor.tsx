@@ -928,7 +928,7 @@ export default function HomepageEditor({
                                                             }
                                                         >
                                                             <option value="category">One category</option>
-                                                            <option value="all">All products</option>
+                                                            <option value="all">Shop All</option>
                                                             <option value="new">New arrivals</option>
                                                             <option value="sale">Sale items</option>
                                                             <option value="manual">Pick products</option>

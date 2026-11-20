@@ -61,7 +61,7 @@ export default function Newsletter() {
         <p className="text-[12px] md:text-[13px] text-gray-400 mb-8 max-w-[400px]">
           {isSubscribed 
             ? "Thank you! Check your email for some love from us" 
-            : "Get 15% off your first order + early access to new drops and restocks."}
+            : "Get 15% off your first order + early access to latest arrivals and restocks."}
         </p>
 
         {!isSubscribed ? (

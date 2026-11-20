@@ -1,139 +1,268 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Search,
-  Package,
-  RotateCcw,
-  Truck,
-  HelpCircle,
-  ArrowRight,
-  ShieldCheck,
-  MessageCircle,
-  Home
-} from 'lucide-react';
 import Link from 'next/link';
+import { HELP_CATEGORIES, HELP_ARTICLES } from '@/lib/constants/help-navigation';
+
+const POPULAR_SEARCHES = ['Shipping', 'Returns', 'Size guide', 'Payment'];
 
 export default function HelpPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const query = searchQuery.trim().toLowerCase();
 
-  const categories = [
-    { title: 'Orders', icon: <Package size={18} />, desc: 'TRACKING AND MODIFICATIONS', path: '/help' },
-    { title: 'Shipping', icon: <Truck size={18} />, desc: 'DELIVERY AND LOGISTICS', path: '/help/shipping' },
-    { title: 'Returns', icon: <RotateCcw size={18} />, desc: 'EXCHANGES AND REFUNDS', path: '/help/returns' },
-    { title: 'Security', icon: <ShieldCheck size={18} />, desc: 'PRIVACY AND TERMS', path: '/help/privacy' },
-    { title: 'Sizing', icon: <HelpCircle size={18} />, desc: 'FIT AND MEASUREMENTS', path: '/help/size-guide' },
-    { title: 'Support', icon: <MessageCircle size={18} />, desc: 'CONTACT OUR TEAM', path: '/help/contact' }
-  ];
+    const results = useMemo(() => {
+        if (!query) return [];
+        return HELP_ARTICLES.filter(
+            (article) =>
+                article.title.toLowerCase().includes(query) ||
+                article.description.toLowerCase().includes(query) ||
+                article.category.toLowerCase().includes(query)
+        );
+    }, [query]);
 
-  const filteredCategories = categories.filter(cat =>
-    cat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cat.desc.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    return (
+        <div className="min-h-screen bg-white text-black selection:bg-[#d8a4bc]/20">
+            {/* Hero */}
+            <section className="relative overflow-hidden border-b border-gray-100">
+                <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#d8a4bc]/10 blur-[90px]" />
 
-  return (
-    <div className="min-h-screen bg-white text-black selection:bg-[#d8a4bc]/20">
-      {/* Legend Hero */}
-      <div className="relative pt-12 pb-12 md:pt-16 md:pb-16 px-6 overflow-hidden bg-black text-white">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto text-center relative z-10"
-        >
-          {/* Home Link */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-gray-500 hover:text-[#d8a4bc] transition-colors mb-8 group"
-          >
-            <Home size={14} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Home</span>
-          </Link>
+                <div className="relative mx-auto max-w-5xl px-5 pb-12 pt-10 md:px-8 md:pb-16 md:pt-16">
+                    <nav
+                        aria-label="Breadcrumb"
+                        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400"
+                    >
+                        <Link href="/" className="transition-colors hover:text-black">
+                            Home
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-gray-500">Help Center</span>
+                    </nav>
 
-          <div className="block mb-6">
-            <div className="inline-block px-4 py-1.5 bg-[#d8a4bc] text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-full">
-              Help Center
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-2xl space-y-5"
+                    >
+                        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#b87d95]">
+                            Help Center
+                        </p>
+                        <h1 className="text-4xl font-black uppercase leading-[0.9] tracking-tighter md:text-6xl">
+                            How can we
+                            <br />
+                            <span className="text-[#d8a4bc]">help you?</span>
+                        </h1>
+                    </motion.div>
+
+                    {/* Search */}
+                    <motion.div
+                        id="search"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.08 }}
+                        className="mt-8 max-w-xl scroll-mt-28"
+                    >
+                        <div className="relative">
+                            <input
+                                type="search"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search for shipping, returns, sizing…"
+                                aria-label="Search help articles"
+                                className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 pr-12 text-sm font-medium text-black outline-none transition-all placeholder:text-gray-400 focus:border-black focus:ring-4 focus:ring-[#d8a4bc]/10"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    aria-label="Clear search"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-black"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+
+                        {!query && (
+                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-300">
+                                    Popular
+                                </span>
+                                {POPULAR_SEARCHES.map((term) => (
+                                    <button
+                                        key={term}
+                                        type="button"
+                                        onClick={() => setSearchQuery(term)}
+                                        className="rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] text-gray-500 transition-all hover:border-black hover:text-black"
+                                    >
+                                        {term}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Directory */}
+            <section className="mx-auto max-w-5xl px-5 py-12 md:px-8 md:py-16">
+                {query ? (
+                    <div className="space-y-6">
+                        <div className="flex items-baseline justify-between gap-4">
+                            <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400">
+                                {results.length} result{results.length === 1 ? '' : 's'} for “{searchQuery.trim()}”
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 transition-colors hover:text-black"
+                            >
+                                Clear
+                            </button>
+                        </div>
+
+                        {results.length > 0 ? (
+                            <div className="divide-y divide-gray-100 rounded-[28px] border border-gray-100">
+                                {results.map((article) => (
+                                    <Link
+                                        key={article.path}
+                                        href={article.path}
+                                        className="group flex items-start justify-between gap-6 p-5 transition-colors hover:bg-gray-50/70 md:p-6"
+                                    >
+                                        <div className="space-y-1.5">
+                                            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[#d8a4bc]">
+                                                {article.category}
+                                            </p>
+                                            <h3 className="text-base font-black uppercase tracking-tight">
+                                                {article.title}
+                                            </h3>
+                                        </div>
+                                        <span className="mt-1 shrink-0 text-gray-300 transition-all group-hover:translate-x-1 group-hover:text-black">
+                                            →
+                                        </span>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-[28px] border border-gray-100 bg-gray-50/60 px-6 py-14 text-center">
+                                <p className="text-sm font-black uppercase tracking-widest">
+                                    Nothing matched that.
+                                </p>
+                                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-gray-500">
+                                    Try a simpler word, or send us a message and we’ll answer
+                                    directly.
+                                </p>
+                                <Link
+                                    href="/help/contact"
+                                    className="mt-6 inline-flex items-center rounded-full bg-black px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#d8a4bc] hover:text-black"
+                                >
+                                    Contact support
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="space-y-8">
+                        <div className="flex flex-wrap items-end justify-between gap-3">
+                            <h2 className="text-2xl font-black uppercase tracking-tighter md:text-3xl">
+                                Browse by topic
+                            </h2>
+                            <Link
+                                href="/help/contact"
+                                className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 transition-colors hover:text-black"
+                            >
+                                Contact us →
+                            </Link>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {HELP_CATEGORIES.map((category, index) => (
+                                <motion.section
+                                    key={category.id}
+                                    initial={{ opacity: 0, y: 14 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className="flex flex-col rounded-[28px] border border-gray-100 bg-white p-6 transition-colors hover:border-gray-200 md:p-7"
+                                >
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#d8a4bc]">
+                                                {String(index + 1).padStart(2, '0')}
+                                            </p>
+                                            <h3 className="mt-1 text-base font-black uppercase tracking-tight">
+                                                {category.title}
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-5 space-y-1 border-t border-gray-50 pt-4">
+                                        {category.items.map((article) => (
+                                            <Link
+                                                key={article.id}
+                                                href={article.path}
+                                                className="group flex items-center justify-between gap-4 rounded-lg py-2 text-[13px] font-bold text-gray-700 transition-colors hover:text-black"
+                                            >
+                                                <span>{article.title}</span>
+                                                <span className="shrink-0 text-gray-300 transition-all group-hover:translate-x-1 group-hover:text-[#d8a4bc]">
+                                                    →
+                                                </span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </motion.section>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </section>
+
+            {/* Contact band */}
+            <section className="border-t border-gray-100 bg-gray-50/60">
+                <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-12 md:flex-row md:items-center md:justify-between md:px-8 md:py-14">
+                    <div className="max-w-md space-y-2">
+                        <h2 className="text-xl font-black uppercase tracking-tighter md:text-2xl">
+                            Still need a hand?
+                        </h2>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        <Link
+                            href="/help/contact"
+                            className="inline-flex items-center justify-center rounded-full bg-black px-7 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-[#d8a4bc] hover:text-black"
+                        >
+                            Contact support
+                        </Link>
+                        <a
+                            href="mailto:support@lowreligion.com"
+                            className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-7 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-all hover:border-black"
+                        >
+                            support@lowreligion.com
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            {/* Utility footer */}
+            <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-5 py-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 md:px-8">
+                <Link href="/help/privacy" className="hover:text-black">
+                    Privacy policy
+                </Link>
+                <Link href="/help/terms" className="hover:text-black">
+                    Terms of use
+                </Link>
+                <Link href="/help/shipping" className="hover:text-black">
+                    Shipping
+                </Link>
+                <Link href="/help/returns" className="hover:text-black">
+                    Start a return
+                </Link>
+                <Link href="/help/contact" className="hover:text-black">
+                    Contact
+                </Link>
+                <Link href="/collections/all" className="ml-auto hover:text-black">
+                    Continue shopping →
+                </Link>
             </div>
-          </div>
-
-          <h1 className="text-4xl md:text-8xl font-black tracking-tighter uppercase leading-[0.85] mb-8">
-            How Can We <br /><span className="text-[#d8a4bc]">Serve You?</span>
-          </h1>
-
-
-          {/* Search Bar */}
-          <div className="max-w-2xl py-6 mx-auto relative group">
-            <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#d8a4bc] transition-colors" size={18} />
-            <input
-              type="text"
-              placeholder="SEARCH ARTICLES..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-full py-4 pl-16 pr-8 text-[11px] font-black uppercase tracking-[0.3em] outline-none transition-all focus:bg-white focus:text-black focus:border-[#d8a4bc] placeholder:text-gray-600 focus:placeholder:text-gray-300"
-            />
-          </div>
-        </motion.div>
-
-        {/* Background Text Decor */}
-        <div className="absolute bottom-0 left-0 w-full opacity-[0.03] select-none pointer-events-none translate-y-1/2">
-          <h2 className="text-[20vw] font-black uppercase tracking-tighter whitespace-nowrap">LOW RELIGION SERVICE</h2>
         </div>
-      </div>
-
-      {/* Category Grid */}
-      <div className="max-w-7xl mx-auto py-6 md:py-12 px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-          {filteredCategories.map((cat, i) => (
-            <Link
-              key={i}
-              href={cat.path}
-              className="group relative p-3 md:p-6 border border-gray-100 rounded-[20px] md:rounded-[32px] hover:border-black transition-all bg-white flex items-center gap-3 md:gap-6 text-left"
-            >
-              <div className="w-8 h-8 md:w-12 md:h-12 shrink-0 rounded-lg md:rounded-2xl bg-gray-50 flex items-center justify-center text-black group-hover:bg-[#d8a4bc] transition-all">
-                {cat.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-[11px] md:text-xl font-black text-[#d8a4bc] uppercase tracking-tighter truncate leading-tight">{cat.title}</h3>
-                <p className="hidden md:block text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] truncate mt-1">{cat.desc}</p>
-              </div>
-              <div className="hidden md:flex shrink-0 w-8 h-8 rounded-full border border-gray-100 items-center justify-center group-hover:bg-black group-hover:text-white transition-all">
-                <ArrowRight size={14} />
-              </div>
-            </Link>
-          ))}
-          {filteredCategories.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[10px]">No topics match your search query.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Bottom Section */}
-      <div className="bg-gray-50 py-20 md:py-32 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-12">
-          <div className="space-y-4">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase">Support Line</h2>
-            <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-[0.4em] leading-loose">
-              Response time within 2-4 business hours.
-            </p>
-          </div>
-          <div className="flex flex-col md:flex-row gap-6 justify-center">
-            <Link
-              href="/help/contact"
-              className="bg-black text-white px-12 py-6 rounded-full text-[11px] font-black uppercase tracking-[0.3em] hover:bg-[#d8a4bc] hover:text-black transition-all shadow-2xl"
-            >
-              Contact Team
-            </Link>
-            <Link
-              href="/help/faqs"
-              className="bg-white text-black border border-black/10 px-12 py-6 rounded-full text-[11px] font-black uppercase tracking-[0.3em] hover:bg-gray-50 transition-all shadow-lg"
-            >
-              Read Basics
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }

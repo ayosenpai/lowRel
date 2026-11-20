@@ -8,8 +8,10 @@ import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { useCart, CartItem } from '@/lib/cart-context';
 import { getProducts } from '@/lib/actions/products';
+import { getActivePromoCoupon } from '@/lib/actions/coupons';
 import { Product } from '@/lib/types';
 import SupabaseImage from '@/components/SupabaseImage';
+import { isComingSoon } from '@/lib/store-config';
 
 interface OrderSnapshot {
     orderId: string;
@@ -32,6 +34,7 @@ export default function SuccessPage() {
     const [upsell, setUpsell] = useState<Product | null>(null);
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
     const [upsellAdded, setUpsellAdded] = useState(false);
+    const [promo, setPromo] = useState<{ code: string; value: number } | null>(null);
 
     useEffect(() => {
         // Restore the real order snapshot saved by the payment page
@@ -50,11 +53,20 @@ export default function SuccessPage() {
 
         // Load a real accessory for the post-purchase upsell
         let cancelled = false;
-        getProducts({ category: 'Accessories', limit: 1 })
+        getProducts({ category: 'Accessories', limit: 6 })
             .then(({ products }) => {
-                if (!cancelled && products[0]) setUpsell(products[0]);
+                const pick = products.find(
+                    (product) => !isComingSoon(product) && (product.price ?? 0) > 0
+                );
+                if (!cancelled && pick) setUpsell(pick);
             })
             .catch((e) => console.error('Failed to load upsell product:', e));
+
+        getActivePromoCoupon()
+            .then((coupon) => {
+                if (!cancelled && coupon) setPromo({ code: coupon.code, value: coupon.value });
+            })
+            .catch(() => {});
 
         return () => {
             cancelled = true;
@@ -243,20 +255,22 @@ export default function SuccessPage() {
                             </div>
 
                             {/* Motivation Section */}
-                            <div className="bg-white rounded-none p-4 md:p-6 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 md:w-12 md:h-12 bg-[#d8a4bc]/10 text-[#d8a4bc] rounded-none flex items-center justify-center shrink-0">
-                                        <Gift size={20} />
+                            {promo && (
+                                <div className="bg-white rounded-none p-4 md:p-6 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 md:w-12 md:h-12 bg-[#d8a4bc]/10 text-[#d8a4bc] rounded-none flex items-center justify-center shrink-0">
+                                            <Gift size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-xs md:text-sm font-bold text-gray-900">Next drop gift</p>
+                                            <p className="text-[10px] md:text-xs text-gray-500">{promo.value}% OFF your next piece.</p>
+                                        </div>
                                     </div>
-                                    <div className="text-left">
-                                        <p className="text-xs md:text-sm font-bold text-gray-900">Next drop gift</p>
-                                        <p className="text-[10px] md:text-xs text-gray-500">15% OFF your next piece.</p>
+                                    <div className="bg-gray-50 px-4 py-2 rounded-none border-2 border-dashed border-gray-200">
+                                        <span className="font-mono font-bold text-sm md:text-lg tracking-wider">{promo.code}</span>
                                     </div>
                                 </div>
-                                <div className="bg-gray-50 px-4 py-2 rounded-none border-2 border-dashed border-gray-200">
-                                    <span className="font-mono font-bold text-sm md:text-lg tracking-wider">MATTERBABY</span>
-                                </div>
-                            </div>
+                            )}
 
                             {/* Ordered Items */}
                             {order && order.items.length > 0 && (

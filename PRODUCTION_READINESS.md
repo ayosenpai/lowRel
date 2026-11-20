@@ -133,7 +133,7 @@ type, a title, a visibility flag and a whitelisted JSON config:
 | Category Grid | 2–4 columns, tiles (label/link/image), fallback image category |
 | Product Grid | source (category / all / new / sale / manual products), limit, 2–5 columns, view-all link |
 | Product Carousel | source, limit, cards per view, view-all link |
-| Shop The Look Strip | source, limit, heading, view-all link |
+| Shop the Archive Strip | source, limit, heading, view-all link |
 
 Only known section types are rendered, and every server action re-checks
 `requireAdmin()` and sanitizes the config. Saving replaces the full ordered

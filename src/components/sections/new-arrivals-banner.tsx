@@ -14,7 +14,7 @@ const REPEATS = 3;
 
 export default function NewArrivalsBanner({
   products = [],
-  title = 'Shop The Look',
+  title = 'Shop the Archive',
   ctaLabel = '',
   ctaHref = '',
 }: {

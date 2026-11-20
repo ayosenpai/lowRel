@@ -12,10 +12,11 @@ import { useRouter } from 'next/navigation';
 
 export default function PaymentPage() {
     const { state, dispatch } = useCart();
-    const { checkoutData, discountCode, discountAmount, applyDiscount } = useCheckout();
+    const { checkoutData, discountCode, discountAmount, applyDiscount, clearDiscount } = useCheckout();
     const [isProcessing, setIsProcessing] = useState(false);
     const [couponInput, setCouponInput] = useState('');
     const [applyError, setApplyError] = useState('');
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const [paymentError, setPaymentError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState(false);
@@ -78,11 +79,16 @@ export default function PaymentPage() {
         }
     }, [state.items.length, dispatch, router]);
 
-    const handleApplyDiscount = () => {
+    const handleApplyDiscount = async () => {
         setApplyError('');
-        const success = applyDiscount(couponInput);
-        if (!success) {
-            setApplyError('Invalid discount code');
+        setIsApplyingCoupon(true);
+        try {
+            const success = await applyDiscount(couponInput);
+            if (!success) {
+                setApplyError('Invalid discount code');
+            }
+        } finally {
+            setIsApplyingCoupon(false);
         }
     };
 
@@ -427,10 +433,10 @@ export default function PaymentPage() {
                                 <button
                                     type="button"
                                     onClick={handleApplyDiscount}
-                                    disabled={!couponInput || isProcessing}
-                                    className="h-[52px] px-6 bg-[#f3f3f3] rounded-none font-semibold text-sm hover:bg-[#e5e5e5] transition-all"
+                                    disabled={!couponInput || isProcessing || isApplyingCoupon}
+                                    className="h-[52px] px-6 bg-[#f3f3f3] rounded-none font-semibold text-sm hover:bg-[#e5e5e5] transition-all disabled:opacity-50"
                                 >
-                                    Apply
+                                    {isApplyingCoupon ? '...' : 'Apply'}
                                 </button>
                             </div>
                             {applyError && <p className="text-xs text-red-500 font-medium pl-1">{applyError}</p>}
@@ -439,7 +445,7 @@ export default function PaymentPage() {
                                     <span className="text-xs font-bold uppercase tracking-widest">{discountCode} Applied</span>
                                     <button
                                         type="button"
-                                        onClick={() => { setCouponInput(''); applyDiscount(''); }}
+                                        onClick={() => { setCouponInput(''); clearDiscount(); }}
                                         className="text-xs hover:text-black font-bold"
                                     >
                                         ×

@@ -4,22 +4,22 @@ import CategoryGridClient from './category-grid-client';
 
 const categoryDefinitions = [
   {
-    title: 'NEW drops',
+    title: 'Latest arrivals',
     href: '/collections/tops',
     productsParams: { category: 'Tops', limit: 1, page: 1 }
   },
   {
-    title: 'Sale Tops',
+    title: 'Sale Tops/Upperwear',
     href: '/collections/bottoms',
     productsParams: { category: 'Tops', limit: 1, page: 2 }
   },
   {
-    title: 'Sale Accessories',
+    title: 'Sale Accessory Arrival',
     href: '/collections/accessories',
     productsParams: { category: 'Tops', limit: 1, page: 3 }
   },
   {
-    title: 'All products',
+    title: 'Shop All',
     href: '/collections/all',
     productsParams: { category: 'Tops', limit: 1, page: 4 }
   },

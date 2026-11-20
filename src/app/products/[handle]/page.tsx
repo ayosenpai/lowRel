@@ -101,13 +101,21 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
     .select()
     .from(productTable)
     .where(eq(productTable.category, rawProduct.category || ''))
-    .limit(5);
+    .limit(12);
 
-  const relatedProducts = relatedProductsData.map(p => ({
-    ...p,
-    price: isIndia ? p.priceINR / 100 : p.priceUSD / 100,
-    symbol: isIndia ? '₹' : '$',
-  }));
+  const relatedProducts = relatedProductsData
+    .map(p => ({
+      ...p,
+      price: isIndia ? p.priceINR / 100 : p.priceUSD / 100,
+      symbol: isIndia ? '₹' : '$',
+    }))
+    .filter(
+      (p) =>
+        p.id !== rawProduct.id &&
+        !isComingSoon(p) &&
+        (p.price ?? 0) > 0
+    )
+    .slice(0, 4);
 
   const reviewStats = await getReviewStats(rawProduct.id);
 

@@ -13,12 +13,13 @@ import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {
   const { state, dispatch } = useCart();
-  const { checkoutData, updateCheckoutData, discountCode, discountAmount, applyDiscount } = useCheckout();
+  const { checkoutData, updateCheckoutData, discountCode, discountPercent, applyDiscount, clearDiscount } = useCheckout();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   useEffect(() => {
     // Simulate loading
@@ -26,18 +27,23 @@ export default function CheckoutPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     setCouponError('');
-    const success = applyDiscount(couponInput);
-    if (!success) {
-      setCouponError('Invalid discount code');
+    setIsApplyingCoupon(true);
+    try {
+      const success = await applyDiscount(couponInput);
+      if (!success) {
+        setCouponError('Invalid discount code');
+      }
+    } finally {
+      setIsApplyingCoupon(false);
     }
   };
 
   const handleRemoveCoupon = () => {
     setCouponInput('');
     setCouponError('');
-    applyDiscount('');
+    clearDiscount();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -244,16 +250,16 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
-                  disabled={!couponInput}
-                  className="h-[52px] px-6 bg-[#f3f3f3] rounded-none font-semibold text-sm hover:bg-[#e5e5e5] transition-all"
+                  disabled={!couponInput || isApplyingCoupon}
+                  className="h-[52px] px-6 bg-[#f3f3f3] rounded-none font-semibold text-sm hover:bg-[#e5e5e5] transition-all disabled:opacity-50"
                 >
-                  Apply
+                  {isApplyingCoupon ? '...' : 'Apply'}
                 </button>
               </div>
               {couponError && <p className="text-xs text-red-500 font-medium pl-1">{couponError}</p>}
               {discountCode && (
                 <div className="flex items-center gap-2 bg-[#d8a4bc]/10 text-[#d8a4bc] px-3 py-2 rounded-none w-fit">
-                  <span className="text-xs font-bold uppercase tracking-widest">{discountCode} Applied (−{discountAmount * 100}%)</span>
+                  <span className="text-xs font-bold uppercase tracking-widest">{discountCode} Applied (−{discountPercent}%)</span>
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}

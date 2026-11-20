@@ -105,10 +105,10 @@ export const SECTION_DEFINITIONS: Record<
             columns: 2,
             poolCategory: 'Tops',
             items: [
-                { title: 'NEW drops', href: '/collections/new-in' },
-                { title: 'Tops', href: '/collections/tops' },
-                { title: 'Accessories', href: '/collections/accessories' },
-                { title: 'All products', href: '/collections/all' },
+                { title: 'Latest arrivals', href: '/collections/new-in' },
+                { title: 'Tops/Upperwear', href: '/collections/tops' },
+                { title: 'Accessory Arrival', href: '/collections/accessories' },
+                { title: 'Shop All', href: '/collections/all' },
             ],
         },
     },
@@ -141,9 +141,9 @@ export const SECTION_DEFINITIONS: Record<
         },
     },
     'product-strip': {
-        label: 'Shop The Look Strip',
+        label: 'Shop the Archive Strip',
         description: 'A centered, looping strip with product name and price.',
-        defaultTitle: 'Shop The Look',
+        defaultTitle: 'Shop the Archive',
         defaultConfig: {
             source: 'category',
             category: 'Tops',

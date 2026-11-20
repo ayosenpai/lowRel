@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { validateCouponCode } from '@/lib/actions/coupons';
 
 interface CheckoutData {
     email: string;
@@ -19,9 +20,11 @@ interface CheckoutData {
 interface CheckoutContextType {
     checkoutData: CheckoutData;
     discountCode: string;
-    discountAmount: number;
+    discountAmount: number; // rate 0..1
+    discountPercent: number; // e.g. 15
     updateCheckoutData: (data: Partial<CheckoutData>) => void;
-    applyDiscount: (code: string) => boolean;
+    applyDiscount: (code: string) => Promise<boolean>;
+    clearDiscount: () => void;
     resetCheckoutData: () => void;
 }
 
@@ -45,31 +48,39 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     const [checkoutData, setCheckoutData] = useState<CheckoutData>(defaultData);
     const [discountCode, setDiscountCode] = useState('');
     const [discountAmount, setDiscountAmount] = useState(0);
+    const [discountPercent, setDiscountPercent] = useState(0);
 
     const updateCheckoutData = (data: Partial<CheckoutData>) => {
         setCheckoutData(prev => ({ ...prev, ...data }));
     };
 
-    const applyDiscount = (code: string) => {
+    const clearDiscount = () => {
+        setDiscountCode('');
+        setDiscountAmount(0);
+        setDiscountPercent(0);
+    };
+
+    const applyDiscount = async (code: string) => {
         const normalizedCode = code.toUpperCase().trim();
         if (!normalizedCode) {
-            // Empty code clears the applied discount
-            setDiscountCode('');
-            setDiscountAmount(0);
+            clearDiscount();
             return true;
         }
-        if (normalizedCode === 'MATTERBABY') {
-            setDiscountCode('MATTERBABY');
-            setDiscountAmount(0.15); // 15% discount
+
+        const result = await validateCouponCode(normalizedCode);
+        if (result.valid && result.code) {
+            setDiscountCode(result.code);
+            setDiscountAmount(result.rate ?? 0);
+            setDiscountPercent(result.value ?? 0);
             return true;
         }
+
         return false;
     };
 
     const resetCheckoutData = () => {
         setCheckoutData(defaultData);
-        setDiscountCode('');
-        setDiscountAmount(0);
+        clearDiscount();
     };
 
     return (
@@ -77,8 +88,10 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
             checkoutData,
             discountCode,
             discountAmount,
+            discountPercent,
             updateCheckoutData,
             applyDiscount,
+            clearDiscount,
             resetCheckoutData
         }}>
             {children}

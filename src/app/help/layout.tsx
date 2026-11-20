@@ -5,87 +5,110 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HELP_CATEGORIES, HELP_ARTICLES } from '@/lib/constants/help-navigation';
-import { ChevronRight, HelpCircle, X, ChevronDown, Menu as MenuIcon, Home } from 'lucide-react';
 
 export default function HelpLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const currentArticle = HELP_ARTICLES.find(a => a.path === pathname);
+    const currentArticle = HELP_ARTICLES.find((article) => article.path === pathname);
     const isHub = pathname === '/help';
 
-    // Toggle body scroll when mobile menu is open
     useEffect(() => {
-        if (isMobileMenuOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
+        document.body.style.overflow = isMobileMenuOpen ? 'hidden' : 'unset';
+        return () => {
             document.body.style.overflow = 'unset';
-        }
+        };
     }, [isMobileMenuOpen]);
 
-    // If we are on the main help hub, don't wrap in the sidebar layout
+    // The hub brings its own full-width search and directory layout.
     if (isHub) {
         return <div className="min-h-screen bg-white">{children}</div>;
     }
 
     return (
         <div className="min-h-screen bg-white font-sans selection:bg-[#d8a4bc]/20">
-
-            {/* Mobile Sticky Navigation Breadcrumb - Fixed "Botched" feel */}
-            <div className="md:hidden sticky top-0 z-[100] bg-white border-b border-gray-100 flex items-center justify-between px-6 h-14">
-                <div className="flex items-center gap-2">
-                    <Link href="/" className="p-2 hover:bg-gray-50 rounded-full transition-colors">
-                        <Home size={18} className="text-black" />
+            {/* Mobile top bar */}
+            <div className="sticky top-0 z-[100] flex h-14 items-center justify-between border-b border-gray-100 bg-white px-5 md:hidden">
+                <div className="flex min-w-0 items-center gap-2">
+                    <Link
+                        href="/"
+                        aria-label="Back to store"
+                        className="rounded-full px-2 py-2 text-[9px] font-black uppercase tracking-widest text-gray-500 transition-colors hover:bg-gray-50 hover:text-black"
+                    >
+                        Home
                     </Link>
-                    <Link href="/help" className="p-1 px-3 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-full">Help</Link>
-                    <span className="text-gray-300">/</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[120px]">
+                    <Link
+                        href="/help"
+                        className="rounded-full bg-black px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-white"
+                    >
+                        Help
+                    </Link>
+                    <span className="truncate text-[10px] font-black uppercase tracking-widest text-gray-300">
                         {currentArticle?.title || 'Topics'}
                     </span>
                 </div>
 
                 <button
                     onClick={() => setIsMobileMenuOpen(true)}
-                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-full transition-colors"
+                    aria-label="Open help menu"
+                    className="rounded-full px-3 py-2 text-[9px] font-black uppercase tracking-widest text-black transition-colors hover:bg-gray-50"
                 >
-                    <MenuIcon size={18} className="text-black" />
+                    Menu
                 </button>
             </div>
 
-            {/* Mobile Full-Screen Navigation Drawer */}
+            {/* Mobile drawer */}
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] bg-white md:hidden overflow-y-auto"
+                        className="fixed inset-0 z-[200] overflow-y-auto bg-white md:hidden"
                     >
-                        <div className="p-8 space-y-12">
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-black uppercase tracking-[0.3em] text-[#d8a4bc]">Index</span>
-                                <button onClick={() => setIsMobileMenuOpen(false)} className="p-3 bg-gray-50 rounded-full">
-                                    <X size={20} />
+                        <div className="space-y-10 p-6 pb-16">
+                            <div className="flex items-center justify-between pt-2">
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-300">
+                                        Low Religion
+                                    </p>
+                                    <p className="text-lg font-black uppercase tracking-tighter">
+                                        Help Center
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    aria-label="Close help menu"
+                                    className="rounded-full bg-gray-50 px-3 py-2 text-[9px] font-black uppercase tracking-widest text-gray-500"
+                                >
+                                    Close
                                 </button>
                             </div>
 
-                            <div className="space-y-10">
+                            <div className="space-y-8">
                                 {HELP_CATEGORIES.map((category) => (
-                                    <div key={category.id} className="space-y-5">
-                                        <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-300 border-b border-gray-50 pb-2">
+                                    <div key={category.id} className="space-y-3">
+                                        <h3 className="border-b border-gray-100 pb-2 text-[9px] font-black uppercase tracking-[0.35em] text-gray-300">
                                             {category.title}
                                         </h3>
-                                        <div className="grid grid-cols-1 gap-2">
+                                        <div className="space-y-1">
                                             {category.items.map((item) => (
                                                 <Link
                                                     key={item.id}
                                                     href={item.path}
                                                     onClick={() => setIsMobileMenuOpen(false)}
-                                                    className={`group flex items-center justify-between py-2 text-sm transition-all ${pathname === item.path ? 'text-[#d8a4bc]' : 'text-black hover:translate-x-1'
-                                                        }`}
+                                                    className={`flex items-center justify-between rounded-xl px-2 py-2.5 text-sm transition-all ${
+                                                        pathname === item.path
+                                                            ? 'text-[#d8a4bc]'
+                                                            : 'text-black hover:bg-gray-50'
+                                                    }`}
                                                 >
-                                                    <span className="font-black uppercase tracking-widest leading-none">{item.title}</span>
-                                                    {pathname === item.path && <div className="w-1.5 h-1.5 bg-[#d8a4bc] rounded-full" />}
+                                                    <span className="font-black uppercase tracking-widest leading-none">
+                                                        {item.title}
+                                                    </span>
+                                                    {pathname === item.path && (
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-[#d8a4bc]" />
+                                                    )}
                                                 </Link>
                                             ))}
                                         </div>
@@ -93,21 +116,20 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
                                 ))}
                             </div>
 
-                            <div className="pt-10 space-y-4 border-t border-gray-100">
+                            <div className="space-y-3 border-t border-gray-100 pt-8">
                                 <Link
-                                    href="/"
+                                    href="/help#search"
                                     onClick={() => setIsMobileMenuOpen(false)}
-                                    className="flex items-center justify-center gap-3 w-full py-4 border border-black rounded-full text-black text-xs font-black uppercase tracking-[0.3em]"
+                                    className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-200 py-4 text-[10px] font-black uppercase tracking-[0.25em]"
                                 >
-                                    <Home size={16} />
-                                    Home
+                                    Search all topics
                                 </Link>
                                 <Link
                                     href="/help/contact"
                                     onClick={() => setIsMobileMenuOpen(false)}
-                                    className="block w-full py-5 bg-black text-white text-center text-xs font-black uppercase tracking-[0.3em] rounded-full shadow-2xl active:scale-95 transition-transform"
+                                    className="block w-full rounded-full bg-black py-4 text-center text-[10px] font-black uppercase tracking-[0.25em] text-white"
                                 >
-                                    Contact Support
+                                    Contact support
                                 </Link>
                             </div>
                         </div>
@@ -115,65 +137,78 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
                 )}
             </AnimatePresence>
 
-            <div className="container mx-auto max-w-7xl px-4 py-8 md:py-16">
-                <div className="flex flex-col md:flex-row gap-16 lg:gap-24 items-start">
-
-                    {/* Desktop Sidebar - Premium Minimalist */}
-                    <aside className="hidden md:block w-72 shrink-0 sticky top-24 space-y-8">
-                        <Link
-                            href="/"
-                            className="group flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-black hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100"
-                        >
-                            <Home size={16} className="group-hover:-translate-x-1 transition-transform" />
-                            <span className="uppercase tracking-widest text-[11px] font-black">Back to Home</span>
+            <div className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
+                <div className="flex items-start gap-12 lg:gap-16">
+                    {/* Desktop sidebar */}
+                    <aside className="sticky top-24 hidden w-60 shrink-0 space-y-7 md:block lg:w-64">
+                        <Link href="/help" className="block space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-300">
+                                Low Religion
+                            </p>
+                            <p className="text-xl font-black uppercase tracking-tighter">
+                                Help Center
+                            </p>
                         </Link>
 
-                        <div className="space-y-8">
+                        <Link
+                            href="/help#search"
+                            className="flex items-center justify-between rounded-full border border-gray-100 bg-gray-50/60 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 transition-all hover:border-black hover:text-black"
+                        >
+                            Search articles
+                        </Link>
+
+                        <nav className="space-y-7" aria-label="Help topics">
                             {HELP_CATEGORIES.map((category) => (
-                                <div key={category.id} className="space-y-5">
-                                    <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-300 pl-4 border-l border-gray-100">
+                                <div key={category.id} className="space-y-2">
+                                    <h3 className="text-[9px] font-black uppercase tracking-[0.35em] text-gray-300">
                                         {category.title}
                                     </h3>
-                                    <nav className="space-y-1">
+                                    <div className="space-y-0.5">
                                         {category.items.map((item) => {
                                             const isActive = pathname === item.path;
                                             return (
                                                 <Link
                                                     key={item.id}
                                                     href={item.path}
-                                                    className={`group flex items-center justify-between px-4 py-2.5 rounded-xl transition-all ${isActive
-                                                        ? 'bg-[#d8a4bc]/5 text-[#d8a4bc]'
-                                                        : 'text-gray-400 hover:text-black hover:bg-gray-50'
-                                                        }`}
+                                                    className={`group flex items-center justify-between rounded-lg px-3 py-2 text-[11px] font-black uppercase tracking-widest transition-all ${
+                                                        isActive
+                                                            ? 'bg-[#d8a4bc]/10 text-[#b87d95]'
+                                                            : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                                                    }`}
                                                 >
-                                                    <span className="uppercase tracking-widest text-[11px] font-black">{item.title}</span>
-                                                    <ChevronRight
-                                                        size={12}
-                                                        className={`transition-all duration-300 ${isActive ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'}`}
-                                                    />
+                                                    <span>{item.title}</span>
                                                 </Link>
                                             );
                                         })}
-                                    </nav>
+                                    </div>
                                 </div>
                             ))}
-                        </div>
+                        </nav>
 
-                        <div className="p-8 bg-gray-50 rounded-[40px] border border-gray-100 space-y-4">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">Need Assistance?</p>
+                        <div className="rounded-[24px] border border-gray-100 bg-gray-50/60 p-5">
                             <Link
                                 href="/help/contact"
-                                className="block text-center bg-black text-white py-4 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#d8a4bc] hover:shadow-xl hover:shadow-[#d8a4bc]/20 transition-all font-sans"
+                                className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] text-black transition-colors hover:text-[#b87d95]"
                             >
-                                Reach Out
+                                Contact support →
+                            </Link>
+                        </div>
+
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-black uppercase tracking-[0.15em] text-gray-300">
+                            <Link href="/help/privacy" className="hover:text-black">
+                                Privacy
+                            </Link>
+                            <Link href="/help/terms" className="hover:text-black">
+                                Terms
+                            </Link>
+                            <Link href="/help/returns" className="hover:text-black">
+                                Returns
                             </Link>
                         </div>
                     </aside>
 
-                    {/* Main Content Area - Articles */}
-                    <main className="flex-1 min-w-0 md:pl-8 border-l border-gray-50">
-                        {children}
-                    </main>
+                    {/* Article content */}
+                    <main className="min-w-0 max-w-4xl flex-1">{children}</main>
                 </div>
             </div>
         </div>

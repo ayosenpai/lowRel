@@ -16,6 +16,7 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/collections/outerwear`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE_URL}/help`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/help/about`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/help/brand-responsibility`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/help/contact`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/help/faqs`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/help/shipping`, changeFrequency: 'monthly', priority: 0.4 },

@@ -58,7 +58,7 @@ const Footer = () => {
     ],
     'ABOUT US': [
       { label: 'ABOUT US', href: '/help/about' },
-      { label: 'BRAND RESPONSIBILITY', href: '#' },
+      { label: 'BRAND RESPONSIBILITY', href: '/help/brand-responsibility' },
       { label: 'Low Religion Magazine', href: '#' },
     ],
 
@@ -70,8 +70,8 @@ const Footer = () => {
         {/* Newsletter Section - Always visible */}
         <div className="mb-8 md:mb-12">
           <div className="text-center mb-6 md:mb-8">
-            <h2 className="lowrel-header text-[10px] font-black mb-4 uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>O' LORD, THY FASHION GOT ME</h2>
-            <p className="text-[12px] mb-4 md:mb-6 text-gray-400">Get 15% off your first order + early access to new drops and restocks.</p>
+            <h2 className="lowrel-header text-[10px] font-black mb-4 uppercase" style={{ padding: "16px 0px 6px", marginBottom: "10px" }}>ORDINARY WAS NEVER THE PLAN </h2>
+            <p className="text-[12px] mb-4 md:mb-6 text-gray-400">Get 15% off your first order + early access to latest arrivals and restocks.</p>
           </div>
           <div className="max-w-xs md:max-w-sm mx-auto">
             <form onSubmit={handleNewsletterSubmit} className="flex border border-gray-700">
@@ -81,7 +81,7 @@ const Footer = () => {
                 required
                 value={newsletterEmail}
                 onChange={(e) => setNewsletterEmail(e.target.value)}
-                className="flex-1 px-3 py-2 bg-black text-white text-sm placeholder:text-gray-500 focus:outline-none"
+                className="flex-1 px-3 py-2 bg-black text-white text-sm placeholder:text-gray-500 text-center focus:outline-none"
               />
               <button
                 type="submit"
