@@ -266,6 +266,29 @@ export const homepageLayouts = pgTable('homepage_layouts', {
     };
 });
 
+// Blog posts (on-site journal)
+export const blogPosts = pgTable('blog_posts', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    slug: text('slug').notNull().unique(),
+    excerpt: text('excerpt'),
+    content: text('content').notNull().default(''),
+    coverImageUrl: text('cover_image_url'),
+    status: text('status').notNull().default('draft'), // draft | published
+    publishedAt: timestamp('published_at'),
+    position: integer('position').notNull().default(0),
+    seoTitle: text('seo_title'),
+    seoDescription: text('seo_description'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        blogPostSlugIdx: index('blog_post_slug_idx').on(table.slug),
+        blogPostStatusIdx: index('blog_post_status_idx').on(table.status),
+        blogPostPositionIdx: index('blog_post_position_idx').on(table.position),
+    };
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
     orders: many(orders),

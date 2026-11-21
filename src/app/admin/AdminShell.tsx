@@ -16,6 +16,7 @@ import {
     LayoutTemplate,
     ShoppingBag,
     TicketPercent,
+    BookOpen,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,6 +53,7 @@ export default function AdminShell({ email, children }: { email: string; childre
             group: 'Storefront',
             items: [
                 { name: 'Homepage', href: '/admin/homepage', icon: LayoutTemplate },
+                { name: 'Blogs', href: '/admin/blogs', icon: BookOpen },
             ]
         },
         {

@@ -3,7 +3,9 @@ import CategoryGridClient from './category-grid-client';
 import BraceletCarousel from './bracelet-carousel';
 import ProductShowcase from './product-showcase';
 import NewArrivalsBanner from './new-arrivals-banner';
+import BlogTitlesSection from './blog-titles-section';
 import { getProducts } from '@/lib/actions/products';
+import { isComingSoon } from '@/lib/store-config';
 import type { HomepageSection, HomepageSectionConfig } from '@/lib/homepage-sections';
 import type { Product } from '@/lib/types';
 
@@ -63,16 +65,17 @@ export default async function HomepageRenderer({ sections }: { sections: Homepag
 
         const { products } = await getProducts({
           category: section.config.poolCategory || 'Tops',
-          limit: items.length,
+          limit: Math.max(items.length * 3, items.length),
         });
+        const imageProducts = products.filter((p) => p.images?.[0]);
 
         const categoryData = items.map((item, index) => ({
           title: item.title,
           href: item.href,
           image:
             item.image ||
-            products[index]?.images?.[0] ||
-            products[0]?.images?.[0] ||
+            imageProducts[index]?.images?.[0] ||
+            imageProducts[0]?.images?.[0] ||
             '',
         }));
 
@@ -80,7 +83,10 @@ export default async function HomepageRenderer({ sections }: { sections: Homepag
       }
 
       if (PRODUCT_SECTION_TYPES.has(section.type)) {
-        return { section, products: await fetchSectionProducts(section.config) };
+        const products = (await fetchSectionProducts(section.config)).filter(
+          (product) => !isComingSoon(product) && (product.price ?? 0) > 0
+        );
+        return { section, products };
       }
 
       return { section };
@@ -108,6 +114,7 @@ export default async function HomepageRenderer({ sections }: { sections: Homepag
             );
 
           case 'category-grid':
+            if (categoryData.length === 0) return null;
             return (
               <CategoryGridClient
                 key={section.id}
@@ -117,6 +124,7 @@ export default async function HomepageRenderer({ sections }: { sections: Homepag
             );
 
           case 'product-grid':
+            if (products.length === 0) return null;
             return (
               <ProductShowcase
                 key={section.id}
@@ -130,17 +138,22 @@ export default async function HomepageRenderer({ sections }: { sections: Homepag
 
           case 'product-carousel':
             return (
-              <BraceletCarousel
-                key={section.id}
-                products={products}
-                title={section.title}
-                ctaLabel={section.config.ctaLabel}
-                ctaHref={section.config.ctaHref}
-                itemsPerView={section.config.itemsPerView}
-              />
+              <div key={section.id}>
+                {products.length > 0 ? (
+                  <BraceletCarousel
+                    products={products}
+                    title={section.title}
+                    ctaLabel={section.config.ctaLabel}
+                    ctaHref={section.config.ctaHref}
+                    itemsPerView={section.config.itemsPerView}
+                  />
+                ) : null}
+                <BlogTitlesSection />
+              </div>
             );
 
           case 'product-strip':
+            if (products.length === 0) return null;
             return (
               <NewArrivalsBanner
                 key={section.id}

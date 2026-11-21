@@ -35,7 +35,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
   const navBackgroundClass = isSolid
     ? "bg-black border-[#333333]"
     : isGlass
-      ? "bg-black/30 backdrop-blur-xl backdrop-saturate-150 border-white/10"
+      ? "bg-black/70 backdrop-blur-md border-white/10"
       : isTransparent
         ? "bg-transparent border-transparent"
         : "bg-transparent border-transparent";

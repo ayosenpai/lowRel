@@ -5,7 +5,7 @@ import supabaseLoader from "@/lib/supabase-image-loader";
 
 // Client-side wrapper that uses a regular img tag to bypass Next.js image optimization.
 export default function SupabaseImage(props: Omit<ImageProps, "loader">) {
-    const { src, alt, className, fill, style, priority, loading, onLoad, onError, ...rest } = props;
+    const { src, alt, className, fill, style, priority, loading, onLoad, onError, sizes, ...rest } = props;
 
     const imageUrl = typeof src === 'string' ? supabaseLoader({ src, width: 800, quality: 75 }) : '';
     const eager = priority || loading === 'eager';
@@ -16,6 +16,7 @@ export default function SupabaseImage(props: Omit<ImageProps, "loader">) {
                 src={imageUrl}
                 alt={alt || ''}
                 className={className}
+                sizes={sizes || '100vw'}
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', ...style }}
                 loading={eager ? 'eager' : (loading || 'lazy')}
                 decoding={eager ? 'sync' : 'async'}
@@ -32,6 +33,7 @@ export default function SupabaseImage(props: Omit<ImageProps, "loader">) {
             src={imageUrl}
             alt={alt || ''}
             className={className}
+            sizes={sizes}
             style={style}
             loading={eager ? 'eager' : (loading || 'lazy')}
             decoding={eager ? 'sync' : 'async'}
