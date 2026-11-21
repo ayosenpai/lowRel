@@ -96,7 +96,14 @@ const HeroSale = ({
             </div>
           </>
         ) : imageUrl ? (
-          <img src={imageUrl} alt={headline || ''} className="h-full w-full object-cover" />
+          <img
+            src={imageUrl}
+            alt={headline || 'Low Religion hero'}
+            className="h-full w-full object-cover object-center"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+          />
         ) : (
           <div className="h-full w-full bg-[#0F172A]" />
         )}

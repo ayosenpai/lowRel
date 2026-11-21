@@ -86,10 +86,10 @@ export const SECTION_DEFINITIONS: Record<
         description: 'Full-width video or image with optional headline and button.',
         defaultTitle: 'Hero',
         defaultConfig: {
-            mediaType: 'video',
+            mediaType: 'image',
             videoUrl: '/hero/hero.mp4',
             videoWebmUrl: '/hero/hero.webm',
-            imageUrl: '',
+            imageUrl: '/products/IMG_7658.webp',
             height: 'screen',
             headline: '',
             subheadline: '',
