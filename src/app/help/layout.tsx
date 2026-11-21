@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,22 +30,18 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
         <div className="min-h-screen bg-white font-sans selection:bg-[#d8a4bc]/20">
             {/* Mobile top bar */}
             <div className="sticky top-0 z-[100] flex h-14 items-center justify-between border-b border-gray-100 bg-white px-5 md:hidden">
-                <div className="flex min-w-0 items-center gap-2">
-                    <Link
-                        href="/"
-                        aria-label="Back to store"
-                        className="rounded-full px-2 py-2 text-[9px] font-black uppercase tracking-widest text-gray-500 transition-colors hover:bg-gray-50 hover:text-black"
-                    >
-                        Home
+                <div className="flex min-w-0 items-center gap-3">
+                    <Link href="/help" aria-label="Help center" className="shrink-0">
+                        <Image
+                            src="/assets/uni.png"
+                            alt="Low Religion"
+                            width={120}
+                            height={32}
+                            className="h-[18px] w-auto brightness-0"
+                        />
                     </Link>
-                    <Link
-                        href="/help"
-                        className="rounded-full bg-black px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-white"
-                    >
-                        Help
-                    </Link>
-                    <span className="truncate text-[10px] font-black uppercase tracking-widest text-gray-300">
-                        {currentArticle?.title || 'Topics'}
+                    <span className="truncate text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        {currentArticle?.title || 'Help'}
                     </span>
                 </div>
 
@@ -68,10 +65,14 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
                     >
                         <div className="space-y-10 p-6 pb-16">
                             <div className="flex items-center justify-between pt-2">
-                                <div>
-                                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-300">
-                                        Low Religion
-                                    </p>
+                                <div className="space-y-2">
+                                    <Image
+                                        src="/assets/uni.png"
+                                        alt="Low Religion"
+                                        width={140}
+                                        height={36}
+                                        className="h-[22px] w-auto brightness-0"
+                                    />
                                     <p className="text-lg font-black uppercase tracking-tighter">
                                         Help Center
                                     </p>
@@ -141,10 +142,14 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
                 <div className="flex items-start gap-12 lg:gap-16">
                     {/* Desktop sidebar */}
                     <aside className="sticky top-24 hidden w-60 shrink-0 space-y-7 md:block lg:w-64">
-                        <Link href="/help" className="block space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-300">
-                                Low Religion
-                            </p>
+                        <Link href="/help" className="block space-y-3">
+                            <Image
+                                src="/assets/uni.png"
+                                alt="Low Religion"
+                                width={160}
+                                height={40}
+                                className="h-[26px] w-auto brightness-0"
+                            />
                             <p className="text-xl font-black uppercase tracking-tighter">
                                 Help Center
                             </p>

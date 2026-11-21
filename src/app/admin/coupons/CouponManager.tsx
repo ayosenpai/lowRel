@@ -16,6 +16,7 @@ export type SerializableCoupon = {
     type: string;
     value: number;
     isActive: boolean;
+    isPublic: boolean;
     startsAt: string | null;
     expiresAt: string | null;
     maxUses: number | null;
@@ -30,6 +31,7 @@ type FormState = {
     description: string;
     value: string;
     isActive: boolean;
+    isPublic: boolean;
     startsAt: string;
     expiresAt: string;
     maxUses: string;
@@ -40,6 +42,7 @@ const emptyForm: FormState = {
     description: '',
     value: '10',
     isActive: true,
+    isPublic: true,
     startsAt: '',
     expiresAt: '',
     maxUses: '',
@@ -103,6 +106,7 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
             description: coupon.description || '',
             value: String(coupon.value ?? 10),
             isActive: coupon.isActive,
+            isPublic: coupon.isPublic ?? true,
             startsAt: toDateInput(coupon.startsAt),
             expiresAt: toDateInput(coupon.expiresAt),
             maxUses: coupon.maxUses == null ? '' : String(coupon.maxUses),
@@ -128,6 +132,7 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                     description: form.description,
                     value: Number(form.value),
                     isActive: form.isActive,
+                    isPublic: form.isPublic,
                     startsAt: form.startsAt || null,
                     expiresAt: form.expiresAt || null,
                     maxUses: form.maxUses ? Number(form.maxUses) : null,
@@ -253,7 +258,7 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="space-y-2">
                                 <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Starts at (optional)</label>
                                 <input
@@ -283,6 +288,18 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                                     />
                                     <span className="text-[11px] font-bold uppercase tracking-widest text-[#0F172A]">Active</span>
                                 </label>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Visibility</label>
+                                <select
+                                    value={form.isPublic ? 'public' : 'private'}
+                                    onChange={(e) => setForm({ ...form, isPublic: e.target.value === 'public' })}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[11px] font-bold uppercase tracking-widest outline-none focus:ring-1 focus:ring-[#0F172A]"
+                                >
+                                    <option value="public">Public</option>
+                                    <option value="private">Private</option>
+                                </select>
+                                <p className="text-[10px] text-gray-400">Public codes may be shown in promos; private codes work only when entered.</p>
                             </div>
                         </div>
 
@@ -318,6 +335,7 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                                 <th className="px-6 md:px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Code</th>
                                 <th className="px-6 md:px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Discount</th>
                                 <th className="px-6 md:px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Status</th>
+                                <th className="px-6 md:px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Visibility</th>
                                 <th className="px-6 md:px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Redemptions</th>
                                 <th className="px-6 md:px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Window</th>
                                 <th className="px-6 md:px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 text-right">Actions</th>
@@ -326,7 +344,7 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                         <tbody className="divide-y divide-gray-50">
                             {coupons.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-8 py-12 text-center">
+                                    <td colSpan={7} className="px-8 py-12 text-center">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">No coupons yet</p>
                                         <p className="text-xs text-gray-400 mt-1">Create a code to replace hardcoded discounts.</p>
                                     </td>
@@ -350,6 +368,11 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                                             <td className="px-6 md:px-8 py-5">
                                                 <span className={`text-[8px] font-black uppercase tracking-[0.1em] px-2.5 py-1 rounded-md border ${status.className}`}>
                                                     {status.label}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 md:px-8 py-5">
+                                                <span className={`text-[8px] font-black uppercase tracking-[0.1em] px-2.5 py-1 rounded-md border ${coupon.isPublic ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
+                                                    {coupon.isPublic ? 'Public' : 'Private'}
                                                 </span>
                                             </td>
                                             <td className="px-6 md:px-8 py-5">

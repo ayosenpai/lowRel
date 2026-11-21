@@ -113,7 +113,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
   };
 
   const navLinks = [
-    { name: 'New In', href: '/collections/new-in' },
+    { name: 'Latest Arrivals', href: '/collections/new-in' },
     { name: 'Shop', href: '/collections/all' },
     { name: 'Winter Sale', href: '/collections/sale', highlight: true }
   ];
@@ -247,13 +247,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
               {link.name}
             </Link>
           ))}
-          <Link
-            href="/collections/all"
-            onClick={() => setIsMenuOpen(false)}
-            className="block text-3xl font-black uppercase tracking-tight py-2 transition-all duration-300 hover:tracking-wide text-gray-400 hover:text-black"
-          >
-            New Arrivals
-          </Link>
+          {/* consolidated into Latest Arrivals */}
 
           <div className="pt-12 mt-8 border-t border-gray-100 space-y-4">
             <Link href={user ? "/account" : "/login"} className="block text-sm uppercase font-bold tracking-widest hover:text-[#d8a4bc]">
@@ -266,7 +260,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
               Help & Support
             </Link>
             <div className="pt-8 text-[10px] text-gray-400 uppercase tracking-widest">
-              Shipping to: United States ($)
+              Shipping to: India (₹)
             </div>
           </div>
         </div>

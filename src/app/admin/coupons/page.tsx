@@ -6,6 +6,7 @@ export default async function AdminCouponsPage() {
 
     const initialCoupons: SerializableCoupon[] = coupons.map((c) => ({
         ...c,
+        isPublic: c.isPublic ?? true,
         startsAt: c.startsAt ? c.startsAt.toISOString() : null,
         expiresAt: c.expiresAt ? c.expiresAt.toISOString() : null,
         createdAt: c.createdAt.toISOString(),

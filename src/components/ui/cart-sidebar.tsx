@@ -289,7 +289,7 @@ export default function CartSidebar() {
                   <span className="lowrel-header">Checkout</span>
                 </Link>
                 <div className="mt-5 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black">Secure checkout · No duties for US orders</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black">Secure checkout · Free shipping across India</p>
                 </div>
               </div>
             )}

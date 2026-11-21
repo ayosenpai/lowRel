@@ -3,6 +3,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { ensureProfile } from '@/lib/profile'
 
@@ -66,8 +67,11 @@ export async function logout() {
 export async function signInWithGoogle() {
     const supabase = await createClient()
 
-    // Get the origin dynamically (works for both localhost and production)
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const headerList = await headers()
+    const forwardedHost = headerList.get('x-forwarded-host')
+    const forwardedProto = headerList.get('x-forwarded-proto') || 'https'
+    const hostOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : null
+    const origin = (process.env.NEXT_PUBLIC_SITE_URL || hostOrigin || 'http://localhost:3000').replace(/\/$/, '')
 
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

@@ -193,6 +193,7 @@ export const coupons = pgTable('coupons', {
     type: text('type').notNull().default('percent'), // percent
     value: integer('value').notNull(), // percent value, e.g. 15
     isActive: boolean('is_active').notNull().default(true),
+    isPublic: boolean('is_public').notNull().default(true),
     startsAt: timestamp('starts_at'),
     expiresAt: timestamp('expires_at'),
     maxUses: integer('max_uses'),

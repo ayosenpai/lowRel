@@ -5,11 +5,28 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, CreditCard, Truck, Shield, Check, ChevronRight, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { trackEvent } from '@/lib/actions/analytics';
 
 import { useCheckout } from '@/lib/checkout-context';
 import { useRouter } from 'next/navigation';
+
+declare global {
+  interface Window {
+    google?: any;
+    __initGooglePlacesCheckout?: () => void;
+  }
+}
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
+  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
+  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
+  'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
+];
 
 export default function CheckoutPage() {
   const { state, dispatch } = useCart();
@@ -20,11 +37,150 @@ export default function CheckoutPage() {
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
+  const autocompleteRef = useRef<any>(null);
+  const lastPincodeLookupRef = useRef<string>('');
 
   useEffect(() => {
     // Simulate loading
     const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Auto-fill city/state from Indian PIN code (no API key required)
+  useEffect(() => {
+    const pin = (checkoutData.postalCode || '').replace(/\D/g, '');
+    if (pin.length !== 6) {
+      if (pincodeStatus !== 'idle') setPincodeStatus('idle');
+      return;
+    }
+    if (pin === lastPincodeLookupRef.current) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        setPincodeStatus('loading');
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`, {
+          signal: controller.signal,
+        });
+        const data = await res.json();
+        const entry = Array.isArray(data) ? data[0] : null;
+        const office = entry?.Status === 'Success' ? entry.PostOffice?.[0] : null;
+
+        if (office) {
+          lastPincodeLookupRef.current = pin;
+          setPincodeStatus('success');
+          updateCheckoutData({
+            city: office.District || office.Block || office.Name || checkoutData.city,
+            state: office.State || checkoutData.state,
+            postalCode: pin,
+          });
+        } else {
+          setPincodeStatus('error');
+        }
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          setPincodeStatus('error');
+        }
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [checkoutData.postalCode]);
+
+  // Optional: Google Places address autocomplete (requires NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) return;
+
+    const initAutocomplete = () => {
+      if (!window.google?.maps?.places || !addressInputRef.current || autocompleteRef.current) return;
+
+      const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+        componentRestrictions: { country: 'in' },
+        fields: ['address_components', 'formatted_address', 'geometry', 'name'],
+        types: ['address'],
+      });
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        const components: any[] = place?.address_components || [];
+        const get = (type: string) =>
+          components.find((c) => c.types?.includes(type))?.long_name || '';
+        const getShort = (type: string) =>
+          components.find((c) => c.types?.includes(type))?.short_name || '';
+
+        const streetNumber = get('street_number');
+        const route = get('route');
+        const sublocality =
+          get('sublocality_level_1') || get('sublocality') || get('neighborhood') || '';
+        const premise = get('premise') || get('subpremise') || '';
+
+        const line1 = [streetNumber, route].filter(Boolean).join(' ').trim();
+        const addressLine = [premise, line1, sublocality].filter(Boolean).join(', ') || place?.formatted_address || place?.name || '';
+
+        const city =
+          get('locality') ||
+          get('postal_town') ||
+          get('administrative_area_level_2') ||
+          get('sublocality_level_1') ||
+          '';
+        const state = get('administrative_area_level_1');
+        const postalCode = get('postal_code');
+        const country = get('country') || 'India';
+
+        const updates: Record<string, string> = {};
+        if (addressLine) updates.address = addressLine;
+        if (city) updates.city = city;
+        if (state) updates.state = state;
+        if (postalCode) {
+          updates.postalCode = postalCode;
+          lastPincodeLookupRef.current = postalCode.replace(/\D/g, '');
+        }
+        if (country) updates.country = country;
+
+        if (Object.keys(updates).length) {
+          updateCheckoutData(updates);
+          if (postalCode) setPincodeStatus('success');
+        }
+      });
+
+      autocompleteRef.current = autocomplete;
+    };
+
+    if (window.google?.maps?.places) {
+      initAutocomplete();
+      return;
+    }
+
+    const existing = document.querySelector('script[data-google-places="true"]') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener('load', initAutocomplete);
+      return () => existing.removeEventListener('load', initAutocomplete);
+    }
+
+    window.__initGooglePlacesCheckout = initAutocomplete;
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&loading=async&callback=__initGooglePlacesCheckout`;
+    script.async = true;
+    script.defer = true;
+    script.dataset.googlePlaces = 'true';
+    script.onerror = () => {
+      // Fail silently; manual entry and PIN autofill still work
+      console.warn('Google Places script failed to load');
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // keep script cached; just detach callback ref
+      if (window.__initGooglePlacesCheckout === initAutocomplete) {
+        delete window.__initGooglePlacesCheckout;
+      }
+    };
   }, []);
 
   const handleApplyCoupon = async () => {
@@ -47,13 +203,22 @@ export default function CheckoutPage() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    updateCheckoutData({
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    if (name === 'phone') {
+      updateCheckoutData({ phone: value.replace(/\D/g, '').slice(0, 10) });
+      return;
+    }
+    updateCheckoutData({ [name]: value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const phoneDigits = (checkoutData.phone || '').replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      alert('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    updateCheckoutData({ phone: phoneDigits });
     trackEvent({
       eventType: 'begin_checkout',
       payload: {
@@ -343,15 +508,22 @@ export default function CheckoutPage() {
                   className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
                 />
                 
-                <input
-                  required
-                  type="text"
-                  name="address"
-                  value={checkoutData.address}
-                  onChange={handleInputChange}
-                  placeholder="Address"
-                  className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
-                />
+                <div className="space-y-1">
+                  <input
+                    ref={addressInputRef}
+                    required
+                    type="text"
+                    name="address"
+                    value={checkoutData.address}
+                    onChange={handleInputChange}
+                    placeholder={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? 'Search address' : 'Address'}
+                    autoComplete="street-address"
+                    className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
+                  />
+                  {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+                    <p className="text-[11px] text-gray-500 px-1">Start typing to search and auto-fill your address.</p>
+                  ) : null}
+                </div>
                 
                 <input
                   type="text"
@@ -372,26 +544,48 @@ export default function CheckoutPage() {
                     placeholder="City"
                     className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
                   />
-                  <input
+                  <select
                     required
-                    type="text"
                     name="state"
                     value={checkoutData.state || ''}
                     onChange={handleInputChange}
-                    placeholder="State"
-                    className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
-                  />
+                    className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all appearance-none"
+                  >
+                    <option value="">State</option>
+                    {INDIAN_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
                 </div>
                 
-                <input
-                  required
-                  type="text"
-                  name="postalCode"
-                  value={checkoutData.postalCode}
-                  onChange={handleInputChange}
-                  placeholder="PIN code"
-                  className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
-                />
+                <div className="space-y-1">
+                  <input
+                    required
+                    type="text"
+                    name="postalCode"
+                    value={checkoutData.postalCode}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d]/g, '').slice(0, 6);
+                      lastPincodeLookupRef.current = '';
+                      setPincodeStatus('idle');
+                      updateCheckoutData({ postalCode: value });
+                    }}
+                    placeholder="PIN code"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    maxLength={6}
+                    className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
+                  />
+                  {pincodeStatus === 'loading' && (
+                    <p className="text-[11px] text-gray-500 px-1">Looking up city and state…</p>
+                  )}
+                  {pincodeStatus === 'success' && (
+                    <p className="text-[11px] text-gray-500 px-1">City and state auto-filled from PIN code.</p>
+                  )}
+                  {pincodeStatus === 'error' && (checkoutData.postalCode || '').length === 6 && (
+                    <p className="text-[11px] text-gray-500 px-1">Couldn’t auto-fill from this PIN code. You can enter details manually.</p>
+                  )}
+                </div>
                 
                 <input
                   required
@@ -399,7 +593,12 @@ export default function CheckoutPage() {
                   name="phone"
                   value={checkoutData.phone}
                   onChange={handleInputChange}
-                  placeholder="Phone"
+                  placeholder="Mobile number (10 digits)"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  pattern="[0-9]{10}"
+                  maxLength={10}
+                  title="Enter a 10-digit mobile number"
                   className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
                 />
               </section>
@@ -428,7 +627,7 @@ export default function CheckoutPage() {
                   Continue to payment <ArrowRight size={16} />
                 </button>
                 <p className="text-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mt-2">
-                  Secure checkout · No duties for US orders
+                  Secure checkout · Free shipping across India
                 </p>
               </div>
             </form>

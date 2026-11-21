@@ -86,6 +86,7 @@ export async function getActivePromoCoupon(): Promise<CouponRecord | null> {
             .where(
                 and(
                     eq(coupons.isActive, true),
+                    eq(coupons.isPublic, true),
                     or(isNull(coupons.startsAt), lte(coupons.startsAt, now)),
                     or(isNull(coupons.expiresAt), gte(coupons.expiresAt, now))
                 )
@@ -121,6 +122,7 @@ export interface CouponInput {
     description?: string;
     value: number; // percent
     isActive?: boolean;
+    isPublic?: boolean;
     startsAt?: string | null;
     expiresAt?: string | null;
     maxUses?: number | null;
@@ -169,6 +171,7 @@ export async function upsertCoupon(
                     type: 'percent',
                     value,
                     isActive: input.isActive ?? true,
+                    isPublic: input.isPublic ?? true,
                     startsAt,
                     expiresAt,
                     maxUses,
@@ -182,6 +185,7 @@ export async function upsertCoupon(
                 type: 'percent',
                 value,
                 isActive: input.isActive ?? true,
+                isPublic: input.isPublic ?? true,
                 startsAt,
                 expiresAt,
                 maxUses,

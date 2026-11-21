@@ -64,6 +64,13 @@
       "when": 1795065600000,
       "tag": "0008_add_order_discount_code",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795147200000,
+      "tag": "0009_add_coupon_visibility",
+      "breakpoints": true
     }
   ]
 }

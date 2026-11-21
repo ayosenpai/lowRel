@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
         return requested.startsWith('/') && !requested.startsWith('//') ? requested : '/'
     })()
 
-    const redirectTo = request.nextUrl.clone()
-    redirectTo.pathname = next
+    const canonicalOrigin = (process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin).replace(/\/$/, '')
+    const redirectTo = new URL(next, canonicalOrigin)
     redirectTo.searchParams.delete('code')
     redirectTo.searchParams.delete('token_hash')
     redirectTo.searchParams.delete('type')
@@ -50,5 +50,5 @@ export async function GET(request: NextRequest) {
     }
 
     // return the user to an error page with some instructions
-    return NextResponse.redirect(`${request.nextUrl.origin}/login?error=auth_failed`)
+    return NextResponse.redirect(`${canonicalOrigin}/login?error=auth_failed`)
 }
