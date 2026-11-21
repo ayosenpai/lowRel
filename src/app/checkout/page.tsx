@@ -95,7 +95,7 @@ export default function CheckoutPage() {
   // Optional: Google Places address autocomplete (requires NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) return;
+    if (!apiKey || isLoading) return;
 
     const initAutocomplete = () => {
       if (!window.google?.maps?.places || !addressInputRef.current || autocompleteRef.current) return;
@@ -181,7 +181,7 @@ export default function CheckoutPage() {
         delete window.__initGooglePlacesCheckout;
       }
     };
-  }, []);
+  }, [isLoading]);
 
   const handleApplyCoupon = async () => {
     setCouponError('');
