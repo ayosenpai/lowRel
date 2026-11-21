@@ -52,7 +52,7 @@ export default async function CustomerProfilePage({
                     <div className="flex gap-4">
                         <div className="bg-white px-6 py-3 rounded-xl border border-gray-200 shadow-sm text-center">
                             <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Spend</p>
-                            <p className="text-xl font-bold text-gray-900">${((customer.totalSpend || 0) / 100).toFixed(2)}</p>
+                            <p className="text-xl font-bold text-gray-900">₹{((customer.totalSpend || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                         <div className="bg-white px-6 py-3 rounded-xl border border-gray-200 shadow-sm text-center">
                             <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Orders</p>
@@ -147,7 +147,7 @@ export default async function CustomerProfilePage({
                                                 #{order.id.slice(0, 8)}...
                                             </p>
                                             <p className="font-bold text-sm text-gray-900">
-                                                ${(order.totalAmount / 100).toFixed(2)}
+                                                {new Intl.NumberFormat((order.currency || 'INR').toUpperCase() === 'INR' ? 'en-IN' : 'en-US', { style: 'currency', currency: (order.currency || 'INR').toUpperCase() }).format((order.totalAmount || 0) / 100)}
                                             </p>
                                         </div>
                                         <div className="flex justify-between mt-0.5">

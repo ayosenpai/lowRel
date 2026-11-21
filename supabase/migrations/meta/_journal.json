@@ -71,6 +71,13 @@
       "when": 1795147200000,
       "tag": "0009_add_coupon_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795233600000,
+      "tag": "0010_optional_customer_accounts",
+      "breakpoints": true
     }
   ]
 }

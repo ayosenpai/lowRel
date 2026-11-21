@@ -126,7 +126,7 @@ export default function NewArrivalsBanner({
                         <p className={`text-[12px] font-bold tracking-[0.1em] ${comingSoon ? 'text-black/50 uppercase' : 'text-black/60'}`}>
                           {comingSoon
                             ? COMING_SOON_PRICE_LABEL
-                            : <>{product.symbol || "$"} {product.price?.toFixed(2)}</>}
+                            : <>{product.symbol || "₹"} {product.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>}
                         </p>
                       </div>
                     </Link>

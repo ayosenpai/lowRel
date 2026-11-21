@@ -1,10 +1,10 @@
-import { headers } from 'next/headers';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { eq, inArray, and, sql, isNull, lt, or } from 'drizzle-orm';
 import { db } from '@/db';
 import { products, orders, orderItems, customers, coupons } from '@/db/schema';
 import { isComingSoon } from '@/lib/store-config';
 import { validateCouponCode } from '@/lib/actions/coupons';
+import { createClaimToken, hashClaimToken } from '@/lib/claim-token';
 
 export interface OrderItemInput {
     id: string;
@@ -46,9 +46,9 @@ export async function computeOrderTotals(
         throw new OrderValidationError('Too many distinct items in cart');
     }
 
-    const headerList = await headers();
-    const isIndia = headerList.get('x-region') !== 'GLOBAL';
-    const currency: 'INR' | 'USD' = isIndia ? 'INR' : 'USD';
+    // Low Religion storefront is INR-only. Keep stored product prices intact;
+    // use INR price for server-authoritative totals and Razorpay charging.
+    const currency: 'INR' | 'USD' = 'INR';
 
     const ids = [...new Set(items.map((i) => String(i.id)))];
     const rows = await db.select().from(products).where(inArray(products.id, ids));
@@ -74,7 +74,7 @@ export async function computeOrderTotals(
             throw new OrderValidationError('Invalid item quantity');
         }
 
-        const unitPrice = isIndia ? product.priceINR : product.priceUSD;
+        const unitPrice = product.priceINR;
         subtotal += unitPrice * quantity;
 
         lines.push({
@@ -106,6 +106,10 @@ export async function computeOrderTotals(
  * Creates a `pending` order row (plus its items) at Razorpay order creation
  * time. The webhook/confirmation later flips it to `paid`, so we never lose
  * a paid order just because the shopper closed the browser early.
+ *
+ * A secure claim token is generated here (not in markOrderPaid) so the raw
+ * token can be returned to the verified checkout session that initiated the
+ * order. Only the SHA-256 hash is stored in the database.
  */
 export async function createPendingOrder(params: {
     razorpayOrderId: string;
@@ -115,7 +119,9 @@ export async function createPendingOrder(params: {
     discountCode?: string | null;
     shippingAddress: Record<string, unknown> | null;
     lines: ComputedOrder['lines'];
-}): Promise<string> {
+}): Promise<{ orderRecordId: string; claimToken: string; claimTokenExpiresAt: Date }> {
+    const claim = createClaimToken();
+
     // Order + items must land together, otherwise a paid order could exist
     // without its line items.
     return db.transaction(async (tx) => {
@@ -129,6 +135,8 @@ export async function createPendingOrder(params: {
                 status: 'pending',
                 discountCode: params.discountCode ?? null,
                 shippingAddress: params.shippingAddress,
+                claimTokenHash: claim.tokenHash,
+                claimTokenExpiresAt: claim.expiresAt,
             })
             .returning({ id: orders.id });
 
@@ -147,7 +155,11 @@ export async function createPendingOrder(params: {
             );
         }
 
-        return orderRecordId;
+        return {
+            orderRecordId,
+            claimToken: claim.rawToken,
+            claimTokenExpiresAt: claim.expiresAt,
+        };
     });
 }
 

@@ -366,7 +366,7 @@ export default function CheckoutPage() {
               <span className="text-sm font-semibold text-gray-900">Order summary</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-lg font-semibold text-gray-900">{state.items[0]?.symbol || '₹'} {state.total.toFixed(2)}</span>
+              <span className="text-lg font-semibold text-gray-900">{state.items[0]?.symbol || '₹'} {state.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <ChevronDown size={16} className={`text-gray-500 transition-transform ${isOrderSummaryOpen ? 'rotate-180' : ''}`} />
             </div>
           </button>
@@ -389,9 +389,9 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                      <p className="text-xs text-gray-500">{item.symbol || '$'} {item.price}</p>
+                      <p className="text-xs text-gray-500">{item.symbol || '₹'} {(item.price ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900">{item.symbol || '$'} {((item.price || 0) * item.quantity).toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-gray-900">{item.symbol || '₹'} {((item.price || 0) * item.quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                 ))}
               </div>

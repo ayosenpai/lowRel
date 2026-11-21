@@ -1,7 +1,6 @@
 
 import Image from "next/image";
 import { Heart, ChevronRight, Minus, Plus, Share2 } from "lucide-react";
-import { headers } from 'next/headers';
 import { db } from "@/db";
 import { products as productTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -27,18 +26,14 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
     };
   }
 
-  const headerList = await headers();
-  const region = headerList.get('x-region') || 'GLOBAL';
-  const isIndia = region === 'IN';
-
-  const price = isIndia ? product.priceINR / 100 : product.priceUSD / 100;
-  const symbol = isIndia ? '₹' : '$';
-  const currency = isIndia ? 'INR' : 'USD';
+  const price = product.priceINR / 100;
+  const symbol = '₹';
+  const currency = 'INR';
 
   const title = `${product.name} | Low Religion — Minimalist Streetwear`;
   const description = isComingSoon(product)
     ? `${product.description || `Premium ${product.category} in ${product.name}`}. Dropping soon at Low Religion.`
-    : `${product.description || `Premium ${product.category} in ${product.name}`}. ${symbol}${price.toFixed(2)}. Available in multiple sizes. Free shipping on orders over ${symbol}${isIndia ? '5,000' : '100'}.`;
+    : `${product.description || `Premium ${product.category} in ${product.name}`}. ${symbol}${price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Available in multiple sizes. Free shipping across India.`;
 
   return {
     title,
@@ -81,19 +76,12 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
     notFound();
   }
 
-  // Handle localization using headers (set by middleware)
-  const headerList = await headers();
-  const region = headerList.get('x-region') || 'GLOBAL';
-  const isIndia = region === 'IN';
-
   const product = {
     ...rawProduct,
-    price: isIndia ? rawProduct.priceINR / 100 : rawProduct.priceUSD / 100,
-    compareAtPrice: isIndia
-      ? (rawProduct.compareAtPriceINR ? rawProduct.compareAtPriceINR / 100 : undefined)
-      : (rawProduct.compareAtPriceUSD ? rawProduct.compareAtPriceUSD / 100 : undefined),
-    currency: isIndia ? 'INR' : 'USD',
-    symbol: isIndia ? '₹' : '$'
+    price: rawProduct.priceINR / 100,
+    compareAtPrice: rawProduct.compareAtPriceINR ? rawProduct.compareAtPriceINR / 100 : undefined,
+    currency: 'INR',
+    symbol: '₹'
   };
 
   // Fetch related products from same category
@@ -106,8 +94,8 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
   const relatedProducts = relatedProductsData
     .map(p => ({
       ...p,
-      price: isIndia ? p.priceINR / 100 : p.priceUSD / 100,
-      symbol: isIndia ? '₹' : '$',
+      price: p.priceINR / 100,
+      symbol: '₹',
     }))
     .filter(
       (p) =>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { HELP_CATEGORIES, HELP_ARTICLES } from '@/lib/constants/help-navigation';
@@ -28,16 +29,16 @@ export default function HelpPage() {
                 <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#d8a4bc]/10 blur-[90px]" />
 
                 <div className="relative mx-auto max-w-5xl px-5 pb-12 pt-10 md:px-8 md:pb-16 md:pt-16">
-                    <nav
-                        aria-label="Breadcrumb"
-                        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400"
-                    >
-                        <Link href="/" className="transition-colors hover:text-black">
-                            Home
-                        </Link>
-                        <span className="text-gray-300">/</span>
-                        <span className="text-gray-500">Help Center</span>
-                    </nav>
+                    <Link href="/" className="inline-block mb-8" aria-label="Low Religion home">
+                        <Image
+                            src="/assets/uni.png"
+                            alt="Low Religion"
+                            width={160}
+                            height={40}
+                            className="h-[28px] w-auto brightness-0 md:h-[34px]"
+                            priority
+                        />
+                    </Link>
 
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}

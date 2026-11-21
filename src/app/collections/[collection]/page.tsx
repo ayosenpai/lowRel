@@ -118,11 +118,11 @@ export default async function CollectionPage({ params, searchParams }: {
                                             ) : (
                                                 <div className="flex items-center gap-2">
                                                     <span className={`text-xs md:text-sm font-bold ${product.isSale ? 'text-[#ff69b4]' : 'text-black'}`}>
-                                                        {product.symbol} {product.price?.toFixed(2)}
+                                                        {product.symbol} {product.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </span>
                                                     {product.compareAtPrice && (
                                                         <span className="text-xs text-gray-400 line-through">
-                                                            {product.symbol} {product.compareAtPrice.toFixed(2)}
+                                                            {product.symbol} {product.compareAtPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </span>
                                                     )}
                                                 </div>

@@ -57,16 +57,37 @@ export function isRevenueStatus(status: string | null | undefined): boolean {
 /** Amounts are stored in the smallest unit (paise / cents). */
 export function formatOrderMoney(amount: number, currency?: string | null): string {
     const value = Number.isFinite(amount) ? amount / 100 : 0;
-    if ((currency || '').toUpperCase() === 'INR') {
-        return `₹${value.toLocaleString('en-IN', {
+    const code = (currency || 'INR').toUpperCase();
+    try {
+        return new Intl.NumberFormat(code === 'INR' ? 'en-IN' : 'en-US', {
+            style: 'currency',
+            currency: code,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(value);
+    } catch {
+        const locale = code === 'INR' ? 'en-IN' : 'en-US';
+        return `${code} ${value.toLocaleString(locale, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         })}`;
     }
-    return `$${value.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`;
+}
+
+/** Format a major-unit price for storefront display. Defaults to INR. */
+export function formatStorePrice(amountMajorUnits: number, currency = 'INR'): string {
+    const code = (currency || 'INR').toUpperCase();
+    const value = Number.isFinite(amountMajorUnits) ? amountMajorUnits : 0;
+    try {
+        return new Intl.NumberFormat(code === 'INR' ? 'en-IN' : 'en-US', {
+            style: 'currency',
+            currency: code,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(value);
+    } catch {
+        return `${code} ${value.toFixed(2)}`;
+    }
 }
 
 export function orderReference(id: string): string {

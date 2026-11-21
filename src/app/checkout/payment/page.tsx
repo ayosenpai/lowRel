@@ -97,9 +97,9 @@ export default function PaymentPage() {
     const taxes = 0;
     const finalTotal = subtotal - discount;
 
-    // Determine currency from cart items (set by region in getProducts), default to INR
-    const currencyCode = state.items[0]?.currency === 'USD' ? 'USD' : 'INR';
-    const currencySymbol = currencyCode === 'INR' ? '₹' : '$';
+    // Storefront display currency is INR; Razorpay amount/currency is server-authoritative.
+    const currencyCode = 'INR';
+    const currencySymbol = '₹';
 
     const loadRazorpay = (): Promise<boolean> => {
         return new Promise((resolve) => {
@@ -193,11 +193,13 @@ export default function PaymentPage() {
             const orderData = await orderRes.json();
 
             if (!orderRes.ok || orderData.error) {
-                console.error('Order creation failed:', orderData);
+                console.error('Order creation failed:', orderData?.error || 'unknown error');
                 setPaymentError(orderData.error || 'Could not create payment order. Please try again.');
                 setIsProcessing(false);
                 return;
             }
+
+            // Claim token is transported via HttpOnly cookie set by the server.
 
             // Save a pending snapshot BEFORE opening Razorpay. If the browser
             // reloads this page on return (common on mobile redirects) the
@@ -391,7 +393,7 @@ export default function PaymentPage() {
                             <span className="text-sm font-semibold text-gray-900">Order summary</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="text-lg font-semibold text-gray-900">{currencySymbol} {finalTotal.toFixed(2)}</span>
+                            <span className="text-lg font-semibold text-gray-900">{currencySymbol} {finalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             <ChevronDown size={16} className={`text-gray-500 transition-transform ${isOrderSummaryOpen ? 'rotate-180' : ''}`} />
                         </div>
                     </button>
@@ -414,9 +416,9 @@ export default function PaymentPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                            <p className="text-xs text-gray-500">{currencySymbol} {item.price}</p>
+                                            <p className="text-xs text-gray-500">{currencySymbol} {(item.price ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                         </div>
-                                        <p className="text-sm font-semibold text-gray-900">{currencySymbol} {((item.price || 0) * item.quantity).toFixed(2)}</p>
+                                        <p className="text-sm font-semibold text-gray-900">{currencySymbol} {((item.price || 0) * item.quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                     </div>
                                 ))}
                             </div>
@@ -522,7 +524,7 @@ export default function PaymentPage() {
                                     Processing...
                                 </div>
                             ) : (
-                                <><Lock size={16} /> Pay {currencySymbol} {finalTotal.toFixed(2)}</>
+                                <><Lock size={16} /> Pay {currencySymbol} {finalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
                             )}
                         </button>
                         <p className="text-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mt-2">

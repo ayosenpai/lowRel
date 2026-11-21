@@ -470,8 +470,9 @@ export async function getAdminDashboard(rangeDays = 7): Promise<AdminDashboardDa
         }));
 
         const lastPurchase = purchases[purchases.length - 1];
-        const currencyCode = (lastPurchase?.payload as any)?.currency === 'INR' ? 'INR' : 'USD';
-        const currencySymbol = currencyCode === 'INR' ? '₹' : '$';
+        // Storefront display currency is INR.
+        const currencyCode = 'INR';
+        const currencySymbol = '₹';
 
         const hourlyActivity = [...Array(24)].map((_, h) => ({
             hour: h,

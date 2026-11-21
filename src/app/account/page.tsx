@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import Header from '@/components/sections/header'
 import Footer from '@/components/sections/footer'
 import AccountClient from './AccountClient'
+import { getMyOrders } from '@/lib/account-orders'
+import { finalizeClaimForCurrentUser } from '@/lib/actions/account'
 
 export default async function AccountPage() {
     const supabase = await createClient()
@@ -12,6 +14,9 @@ export default async function AccountPage() {
     if (error || !user) {
         redirect('/login')
     }
+
+    await finalizeClaimForCurrentUser().catch(() => {})
+    const orders = await getMyOrders()
 
     return (
         <main className="min-h-screen bg-white text-black pt-[100px]">
@@ -23,7 +28,7 @@ export default async function AccountPage() {
                     <span className="lowrel-link">Home / My Account</span>
                 </nav>
 
-                <AccountClient user={user} />
+                <AccountClient user={user} orders={orders} />
             </div>
 
             <Footer />

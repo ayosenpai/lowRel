@@ -48,7 +48,7 @@ export default function RecentOrders({
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 truncate max-w-[220px] block">{o.customer}</span>
                                 </td>
                                 <td className="px-8 py-4">
-                                    <span className="lr-display text-[12px] font-black text-[#0F172A]">{symbol}{o.total.toFixed(2)}</span>
+                                    <span className="lr-display text-[12px] font-black text-[#0F172A]">{symbol}{o.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </td>
                                 <td className="px-8 py-4">
                                     <span className={`inline-block px-2.5 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest ${statusStyles[o.status] || 'bg-gray-50 text-gray-500 border-gray-100'}`}>

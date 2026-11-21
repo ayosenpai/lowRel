@@ -69,7 +69,7 @@ export default function CompleteTheLook({ products, currentProductId }: Complete
                                     {product.category}
                                 </p>
                                 <p className="text-sm font-bold">
-                                    {product.symbol}{product.price.toFixed(2)}
+                                    {product.symbol}{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </p>
                             </div>
                         </Link>

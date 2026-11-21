@@ -98,11 +98,11 @@ export default async function AdminProductsPage() {
                                     <td className="px-8 py-6">
                                         <div className="space-y-1.5">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[11px] font-black text-[#0F172A] tracking-tighter">${(product.priceUSD / 100).toFixed(2)}</span>
-                                                <span className="text-[8px] font-bold text-blue-500 uppercase tracking-widest">USD</span>
+                                                <span className="text-[11px] font-black text-[#0F172A] tracking-tighter">₹{(product.priceINR / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">INR</span>
                                             </div>
                                             <div className="flex items-center gap-2 opacity-50">
-                                                <span className="text-[10px] font-bold text-gray-500 tracking-tighter">₹{(product.priceINR / 100).toFixed(2)}</span>
+                                                <span className="text-[10px] font-bold text-gray-500 tracking-tighter">₹{(product.priceINR / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">INR</span>
                                             </div>
                                         </div>

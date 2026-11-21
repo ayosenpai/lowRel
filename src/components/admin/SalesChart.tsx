@@ -50,13 +50,13 @@ export default function SalesChart({ data }: { data: any[] }) {
                     fontSize: '12px',
                     fontWeight: 500
                 },
-                formatter: (val) => `$${val}`
+                formatter: (val) => `₹${Number(val).toLocaleString('en-IN')}`
             }
         },
         tooltip: {
             theme: 'light',
             x: { show: true },
-            y: { formatter: (val) => `$${val.toFixed(2)}` }
+            y: { formatter: (val) => `₹${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
         }
     };
 

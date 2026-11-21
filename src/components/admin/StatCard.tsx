@@ -54,7 +54,7 @@ export default function StatCard({
 
     const isPercent = value.trim().endsWith('%');
     const prefix = value.replace(/[0-9.,%]+/g, '').trim();
-    const shown = `${prefix}${isPercent ? animated.toFixed(1) : animated.toLocaleString('en-US', { maximumFractionDigits: 2 })}${isPercent ? '%' : ''}`;
+    const shown = `${prefix}${isPercent ? animated.toFixed(1) : animated.toLocaleString('en-IN', { maximumFractionDigits: 2 })}${isPercent ? '%' : ''}`;
 
     const maxS = sparkline && sparkline.length > 1 ? Math.max(...sparkline, 1) : 1;
     const minS = sparkline && sparkline.length > 1 ? Math.min(...sparkline, 0) : 0;

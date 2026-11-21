@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         //    disappear if the shopper closes the tab before confirmation.
         //    Fail closed: if we cannot persist the order, do not let the
         //    shopper pay into an unrecorded order.
-        await createPendingOrder({
+        const pending = await createPendingOrder({
             razorpayOrderId: order.id,
             amount: totals.total,
             currency: totals.currency,
@@ -84,12 +84,35 @@ export async function POST(request: NextRequest) {
             lines: totals.lines,
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             id: order.id,
             amount: order.amount,
             currency: order.currency,
             customerId,
         });
+        const existingClaimsRaw = request.cookies.get('lowrel_claims')?.value;
+        let claimTokens: string[] = [];
+        if (existingClaimsRaw) {
+            try {
+                const parsed = JSON.parse(existingClaimsRaw);
+                if (Array.isArray(parsed)) claimTokens = parsed.filter((t): t is string => typeof t === 'string' && t.length > 0);
+            } catch {
+                claimTokens = [];
+            }
+        }
+        const legacyClaim = request.cookies.get('lowrel_claim')?.value;
+        if (legacyClaim) claimTokens.push(legacyClaim);
+        claimTokens = [...new Set([...claimTokens, pending.claimToken])].slice(-5);
+        const cookieOpts = {
+            httpOnly: true,
+            sameSite: 'lax' as const,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7,
+        };
+        response.cookies.set('lowrel_claims', JSON.stringify(claimTokens), cookieOpts);
+        response.cookies.set('lowrel_claim', '', { ...cookieOpts, maxAge: 0 });
+        return response;
     } catch (error: any) {
         if (error instanceof OrderValidationError) {
             return NextResponse.json({ error: error.message }, { status: 400 });

@@ -301,6 +301,41 @@ export default async function AdminOrderDetailPage({
                     <div className="admin-card rounded-2xl p-6">
                         <div className="mb-4">
                             <h2 className="text-sm font-black uppercase tracking-tight text-[#0F172A]">
+                                Tracking
+                            </h2>
+                            <p className="mt-1 text-[10px] font-medium leading-relaxed text-gray-400">
+                                Saved tracking details are visible to the customer in My Orders.
+                            </p>
+                        </div>
+                        <dl className="space-y-3">
+                            <div>
+                                <dt className="text-[9px] font-black uppercase tracking-[0.16em] text-gray-400">Carrier</dt>
+                                <dd className="mt-1 text-[11px] font-bold text-[#0F172A]">{order.trackingCarrier || '—'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-[9px] font-black uppercase tracking-[0.16em] text-gray-400">Tracking number</dt>
+                                <dd className="mt-1 break-all text-[11px] font-bold text-[#0F172A]">{order.trackingNumber || '—'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-[9px] font-black uppercase tracking-[0.16em] text-gray-400">Tracking URL</dt>
+                                <dd className="mt-1 break-all text-[11px] font-bold text-[#0F172A]">
+                                    {order.trackingUrl ? (
+                                        <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="text-[#b9849f] hover:text-[#0F172A] underline underline-offset-2">
+                                            {order.trackingUrl}
+                                        </a>
+                                    ) : '—'}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-[9px] font-black uppercase tracking-[0.16em] text-gray-400">Shipped at</dt>
+                                <dd className="mt-1 text-[11px] font-bold text-[#0F172A]">{order.shippedAt ? format(order.shippedAt, 'PP') : '—'}</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div className="admin-card rounded-2xl p-6">
+                        <div className="mb-4">
+                            <h2 className="text-sm font-black uppercase tracking-tight text-[#0F172A]">
                                 Update order
                             </h2>
                             <p className="mt-1 text-[10px] font-medium leading-relaxed text-gray-400">
@@ -312,6 +347,10 @@ export default async function AdminOrderDetailPage({
                             orderId={order.id}
                             initialStatus={order.status}
                             initialPaymentId={order.paymentId}
+                            initialTrackingCarrier={order.trackingCarrier}
+                            initialTrackingNumber={order.trackingNumber}
+                            initialTrackingUrl={order.trackingUrl}
+                            initialShippedAt={order.shippedAt}
                         />
                     </div>
                 </div>

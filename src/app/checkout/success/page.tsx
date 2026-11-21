@@ -1,17 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Package, Heart, ArrowRight, ShoppingBag, Sparkles, Gift, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Check, Heart, ArrowRight, Sparkles, Gift } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { useCart, CartItem } from '@/lib/cart-context';
-import { getProducts } from '@/lib/actions/products';
 import { getActivePromoCoupon } from '@/lib/actions/coupons';
-import { Product } from '@/lib/types';
+import { claimOrderWithUsername, getClaimStatus } from '@/lib/actions/account';
 import SupabaseImage from '@/components/SupabaseImage';
-import { isComingSoon } from '@/lib/store-config';
 
 interface OrderSnapshot {
     orderId: string;
@@ -27,17 +25,17 @@ interface OrderSnapshot {
 
 export default function SuccessPage() {
     const { dispatch } = useCart();
-    const [showContent, setShowContent] = useState(false);
-    const [showUpsell, setShowUpsell] = useState(false);
-    const [orderNumber, setOrderNumber] = useState(() => Math.floor(100000 + Math.random() * 900000));
+    const [orderNumber, setOrderNumber] = useState<string | number>(() => Math.floor(100000 + Math.random() * 900000));
     const [order, setOrder] = useState<OrderSnapshot | null>(null);
-    const [upsell, setUpsell] = useState<Product | null>(null);
-    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
-    const [upsellAdded, setUpsellAdded] = useState(false);
     const [promo, setPromo] = useState<{ code: string; value: number } | null>(null);
+    const [claimStatus, setClaimStatus] = useState<any>(null);
+    const [claimUsername, setClaimUsername] = useState('');
+    const [claimPassword, setClaimPassword] = useState('');
+    const [claimError, setClaimError] = useState('');
+    const [claimMessage, setClaimMessage] = useState('');
+    const [claimSubmitting, setClaimSubmitting] = useState(false);
 
     useEffect(() => {
-        // Restore the real order snapshot saved by the payment page
         try {
             const raw = sessionStorage.getItem('lowrel_order');
             if (raw) {
@@ -51,17 +49,7 @@ export default function SuccessPage() {
             console.error('Failed to read order snapshot:', e);
         }
 
-        // Load a real accessory for the post-purchase upsell
         let cancelled = false;
-        getProducts({ category: 'Accessories', limit: 6 })
-            .then(({ products }) => {
-                const pick = products.find(
-                    (product) => !isComingSoon(product) && (product.price ?? 0) > 0
-                );
-                if (!cancelled && pick) setUpsell(pick);
-            })
-            .catch((e) => console.error('Failed to load upsell product:', e));
-
         getActivePromoCoupon()
             .then((coupon) => {
                 if (!cancelled && coupon) setPromo({ code: coupon.code, value: coupon.value });
@@ -73,80 +61,82 @@ export default function SuccessPage() {
         };
     }, []);
 
+    const refreshClaimStatus = async () => {
+        try {
+            const status = await getClaimStatus();
+            setClaimStatus(status);
+        } catch {
+            // ignore - claim is optional
+        }
+    };
+
     useEffect(() => {
-        // Clear cart immediately on success page arrival
+        refreshClaimStatus();
+    }, []);
+
+    useEffect(() => {
         dispatch({ type: 'CLEAR_CART' });
 
-        // Initial delay for the "celebration" to feel impactful
-        const timer = setTimeout(() => setShowContent(true), 1500);
-
-        // Confetti burst on mount
-        const duration = 3 * 1000;
+        const duration = 1800;
         const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        const defaults = { startVelocity: 24, spread: 70, ticks: 50, zIndex: 0 };
 
         function randomInRange(min: number, max: number) {
             return Math.random() * (max - min) + min;
         }
 
-        const interval: any = setInterval(function () {
-            const timeLeft = animationEnd - Date.now();
-
-            if (timeLeft <= 0) {
-                return clearInterval(interval);
+        const confettiInterval: ReturnType<typeof setInterval> = setInterval(() => {
+            const remaining = animationEnd - Date.now();
+            if (remaining <= 0) {
+                clearInterval(confettiInterval);
+                return;
             }
-
-            const particleCount = 50 * (timeLeft / duration);
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-        }, 250);
-
-        // Show upsell after 3 seconds of showing main content
-        let upsellTimer: any;
-        if (showContent) {
-            upsellTimer = setTimeout(() => setShowUpsell(true), 1500);
-        }
-
-        // Countdown timer
-        const timerInterval = setInterval(() => {
-            setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-        }, 1000);
+            const particleCount = Math.max(8, Math.floor(28 * (remaining / duration)));
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.2, 0.4), y: 0.15 } });
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.6, 0.8), y: 0.15 } });
+        }, 300);
 
         return () => {
-            clearTimeout(timer);
-            clearTimeout(upsellTimer);
-            clearInterval(interval);
-            clearInterval(timerInterval);
+            clearInterval(confettiInterval);
         };
-    }, [showContent]);
+    }, [dispatch]);
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+
+
+    const handleClaim = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setClaimError('');
+        setClaimMessage('');
+        setClaimSubmitting(true);
+        try {
+            const result = await claimOrderWithUsername({ username: claimUsername, password: claimPassword });
+            if (result?.error) {
+                setClaimError(result.error);
+            } else if (result?.needsEmailConfirmation) {
+                setClaimMessage(`Check ${result.email || 'your email'} to confirm your account. Once confirmed, your order will be claimed automatically in this browser.`);
+            } else if (result?.claimed) {
+                setClaimMessage('Your Low Religion identity is claimed and this order is linked to your account.');
+            }
+            await refreshClaimStatus();
+        } finally {
+            setClaimSubmitting(false);
+        }
     };
-
-    const handleAddUpsell = () => {
-        if (!upsell) return;
-        dispatch({ type: 'ADD_TO_CART', payload: { product: upsell } });
-        setUpsellAdded(true);
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
-    };
-
-    const upsellHalf = upsell ? (upsell.price ?? 0) / 2 : 0;
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center pt-28 pb-20 md:justify-center p-5 font-sans overflow-x-hidden">
-            {/* Logo Header */}
-            <div className="absolute top-8 left-8 z-10">
-                <Link href="/" className="block">
-                    <Image src="/assets/uni.png" alt="Low Religion Logo" width={180} height={45} priority className="h-[28px] w-auto lg:h-[38px] brightness-0" />
-                </Link>
+        <div className="min-h-screen bg-white font-sans overflow-x-hidden">
+            <div className="border-b border-black">
+                <div className="max-w-5xl mx-auto px-5 py-6 flex items-center justify-between">
+                    <Link href="/" className="block">
+                        <Image src="/assets/uni.png" alt="Low Religion Logo" width={180} height={45} priority className="h-[28px] w-auto lg:h-[34px] brightness-0" />
+                    </Link>
+                    <Link href="/collections/all" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-black transition-colors">
+                        Continue Shopping
+                    </Link>
+                </div>
             </div>
+
+            <div className="max-w-5xl mx-auto px-5 py-10 md:py-14 flex flex-col items-center">
 
             {/* Background Sparkles / Accents */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -170,70 +160,29 @@ export default function SuccessPage() {
                 />
             </div>
 
-            <AnimatePresence mode="wait">
-                {!showContent ? (
-                    <motion.div
-                        key="loading"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
-                        className="flex flex-col items-center gap-6"
-                    >
-                        <div className="relative">
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="max-w-2xl w-full space-y-8 md:space-y-10 relative z-10"
+            >
+                        {/* Header */}
+                        <div className="text-center space-y-4">
                             <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                className="w-24 h-24 border-2 border-dashed border-black/10 rounded-[9999px]"
-                            />
-                            <motion.div
-                                className="absolute inset-0 flex items-center justify-center"
-                                animate={{ scale: [0.8, 1.1, 0.8] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.25 }}
+                                className="w-14 h-14 bg-black text-white flex items-center justify-center mx-auto"
                             >
-                                <Package className="text-black" size={32} />
+                                <Check size={28} strokeWidth={2.5} />
                             </motion.div>
-                        </div>
-                        <p className="font-bold tracking-widest uppercase text-xs text-gray-400">Securing your order...</p>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="content"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="max-w-xl w-full text-center space-y-6 md:space-y-12 relative z-10"
-                    >
-                        {/* Header / Primary Message */}
-                        <div className="space-y-6">
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
-                                transition={{
-                                    scale: { delay: 0.2, type: 'spring', damping: 12 },
-                                    rotate: { delay: 0.2, duration: 0.5, ease: "easeInOut" }
-                                }}
-                                className="w-16 h-16 md:w-24 md:h-24 bg-black text-white rounded-none md:rounded-none flex items-center justify-center mx-auto shadow-2xl"
-                            >
-                                <Check size={32} className="md:w-10 md:h-10" strokeWidth={3} />
-                            </motion.div>
-
-                            <div className="space-y-2">
-                                <motion.h1
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight leading-none"
-                                >
-                                    Welcome to the family.
-                                </motion.h1>
-                                <motion.p
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.6 }}
-                                    className="text-gray-500 text-base md:text-xl"
-                                >
-                                    Your order <span className="text-black font-bold">{order ? order.orderId : `#${orderNumber}`}</span> is confirmed and being prepared.
-                                </motion.p>
-                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Order Confirmed</p>
+                            <h1 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight leading-[0.95]">
+                                Welcome to the family.
+                            </h1>
+                            <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto">
+                                Your order <span className="text-black font-semibold">{order ? order.orderId : `#${orderNumber}`}</span> is confirmed. We&apos;ll send updates when it ships.
+                            </p>
                         </div>
 
                         {/* Gratitude & Info Card */}
@@ -293,8 +242,8 @@ export default function SuccessPage() {
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-sm font-semibold text-gray-900">{order.symbol || '$'}{((item.price ?? 0) * item.quantity).toFixed(2)}</p>
-                                                    <p className="text-xs text-gray-400">{order.symbol || '$'}{(item.price ?? 0).toFixed(2)} each</p>
+                                                    <p className="text-sm font-semibold text-gray-900">{order.symbol || '₹'}{((item.price ?? 0) * item.quantity).toLocaleString(order.currency === 'USD' ? 'en-US' : 'en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                                    <p className="text-xs text-gray-400">{order.symbol || '₹'}{(item.price ?? 0).toLocaleString(order.currency === 'USD' ? 'en-US' : 'en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -303,22 +252,87 @@ export default function SuccessPage() {
                                     <div className="text-sm space-y-1">
                                         <div className="flex justify-between text-gray-600">
                                             <span>Subtotal</span>
-                                            <span>{order.symbol || '$'}{order.subtotal.toFixed(2)}</span>
+                                            <span>{order.symbol || '₹'}{order.subtotal.toLocaleString(order.currency === 'USD' ? 'en-US' : 'en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         {order.discount > 0 && (
                                             <div className="flex justify-between text-gray-600">
                                                 <span>Discount{order.discountCode ? ` (${order.discountCode})` : ''}</span>
-                                                <span>-{order.symbol || '$'}{order.discount.toFixed(2)}</span>
+                                                <span>-{order.symbol || '₹'}{order.discount.toLocaleString(order.currency === 'USD' ? 'en-US' : 'en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-100">
                                             <span>Total</span>
-                                            <span>{order.symbol || '$'}{order.total.toFixed(2)}</span>
+                                            <span>{order.symbol || '₹'}{order.total.toLocaleString(order.currency === 'USD' ? 'en-US' : 'en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                     </div>
                                 </div>
                             )}
                         </motion.div>
+
+                        {/* Claim Identity */}
+                        {claimStatus && claimStatus.state !== 'invalid' && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.9 }}
+                            className="bg-white border border-gray-200 rounded-none p-6 md:p-8 text-left space-y-4"
+                        >
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Optional</p>
+                                <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Claim your Low Religion identity</h2>
+                                <p className="text-sm text-gray-500">
+                                    Create a username and password to unlock <span className="font-semibold text-gray-700">My Orders</span> and <span className="font-semibold text-gray-700">order tracking</span>. Your purchase is already confirmed — you can skip this and keep shopping.
+                                </p>
+                            </div>
+
+                            {claimStatus?.state === 'claimed' ? (
+                                <div className="bg-green-50 border border-green-100 p-4 text-sm text-green-800">
+                                    This order is linked to your account. <Link href="/account" className="underline font-semibold">Go to My Orders</Link>
+                                </div>
+                            ) : claimStatus?.state === 'pending_payment' ? (
+                                <p className="text-sm text-gray-500">Order claim will be available after payment confirmation.</p>
+                            ) : claimStatus?.state === 'expired' ? (
+                                <p className="text-sm text-gray-500">This claim link has expired. Contact support for help.</p>
+                            ) : claimStatus?.state === 'email_mismatch' ? (
+                                <p className="text-sm text-gray-500">You’re signed in with a different email than the one used for this order. Sign in with the order email to claim it.</p>
+                            ) : (
+                                <form onSubmit={handleClaim} className="space-y-3">
+                                    {claimStatus?.email && (
+                                        <p className="text-xs text-gray-500">Checkout email: <span className="font-semibold text-gray-700">{claimStatus.email}</span></p>
+                                    )}
+                                    <input
+                                        value={claimUsername}
+                                        onChange={(e) => setClaimUsername(e.target.value)}
+                                        placeholder="Username"
+                                        autoComplete="username"
+                                        required
+                                        className="w-full h-12 border border-gray-300 px-4 text-sm outline-none focus:border-black"
+                                    />
+                                    <input
+                                        type="password"
+                                        value={claimPassword}
+                                        onChange={(e) => setClaimPassword(e.target.value)}
+                                        placeholder="Password (min 8 characters)"
+                                        autoComplete="new-password"
+                                        minLength={8}
+                                        required
+                                        className="w-full h-12 border border-gray-300 px-4 text-sm outline-none focus:border-black"
+                                    />
+                                    {claimError && <p className="text-sm text-red-600">{claimError}</p>}
+                                    {claimMessage && <p className="text-sm text-green-700">{claimMessage}</p>}
+                                    <button
+                                        type="submit"
+                                        disabled={claimSubmitting}
+                                        className="w-full h-12 bg-black text-white text-xs font-black uppercase tracking-[0.15em] disabled:opacity-50"
+                                    >
+                                        {claimSubmitting ? 'Processing...' : 'Claim your identity'}
+                                    </button>
+                                    <p className="text-[11px] text-gray-400">If email confirmation is required, confirm it and return to this browser — your order claim will complete automatically.</p>
+                                    <p className="text-[11px] text-gray-400">Prefer not to? You can skip this step — your purchase is safe and unaffected.</p>
+                                </form>
+                            )}
+                        </motion.div>
+                        )}
 
                         {/* Actions */}
                         <motion.div
@@ -335,73 +349,6 @@ export default function SuccessPage() {
                                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </motion.div>
-
-                        {/* Post-Purchase Upsell Section */}
-                        <AnimatePresence>
-                            {showUpsell && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0, y: 10 }}
-                                    animate={{ opacity: 1, height: 'auto', y: 0 }}
-                                    className="pt-6 md:pt-12 border-t border-gray-100"
-                                >
-                                    <div className="bg-black rounded-none md:rounded-none p-6 md:p-12 relative overflow-hidden group">
-                                        {/* Decorative Blur */}
-                                        <div className="absolute top-0 right-0 w-48 h-48 bg-[#d8a4bc]/20 rounded-none blur-[80px] -mr-24 -mt-24" />
-
-                                        <div className="relative z-10 flex flex-col items-center md:flex-row md:items-center gap-6 md:gap-10 text-center md:text-left">
-                                            <div className="w-28 h-28 md:w-40 md:h-40 bg-white rounded-none overflow-hidden shadow-2xl shrink-0 group-hover:scale-105 transition-transform duration-500">
-                                                {upsell && upsell.images && upsell.images[0] ? (
-                                                    <SupabaseImage src={upsell.images[0]} alt={upsell.name} width={160} height={160} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gray-200 animate-pulse" />
-                                                )}
-                                            </div>
-
-                                            <div className="flex-1 space-y-4 md:space-y-6">
-                                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
-                                                    <span className="bg-[#d8a4bc] text-black text-[9px] font-bold px-3 py-1 rounded-none uppercase tracking-widest">
-                                                        Limited Offer
-                                                    </span>
-                                                    <div className="flex items-center gap-1.5 text-white/60 text-[9px] font-bold uppercase tracking-widest">
-                                                        <Clock size={10} />
-                                                        {formatTime(timeLeft)}
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-1">
-                                                    <h3 className="text-xl md:text-3xl font-bold text-white tracking-tight leading-tight">Accessory of the Devout.</h3>
-                                                    <p className="text-gray-400 text-[10px] md:text-sm leading-relaxed max-w-sm mx-auto md:mx-0">
-                                                        Add {upsell ? `our ${upsell.name}` : 'the perfect finishing piece'} now for <span className="text-white font-bold">50% OFF</span>.
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex items-center justify-center md:justify-start gap-4">
-                                                    <div className="flex flex-col text-left">
-                                                        <span className="text-gray-500 line-through text-[10px]">{upsell ? `${upsell.symbol || '$'}${(upsell.price ?? 0).toFixed(2)}` : '$0.00'}</span>
-                                                        <span className="text-white font-bold text-lg md:text-xl">{upsell ? `${upsell.symbol || '$'}${upsellHalf.toFixed(2)}` : '$0.00'}</span>
-                                                    </div>
-
-                                                    <button
-                                                        onClick={handleAddUpsell}
-                                                        disabled={upsellAdded || !upsell}
-                                                        className={`px-6 md:px-8 py-3 md:py-4 rounded-none font-bold text-[11px] md:text-sm transition-all flex items-center justify-center gap-2 ${upsellAdded
-                                                            ? 'bg-green-500 text-white'
-                                                            : 'bg-white text-black hover:bg-gray-200'
-                                                            }`}
-                                                    >
-                                                        {upsellAdded ? (
-                                                            <><Check size={16} /> Added</>
-                                                        ) : (
-                                                            <>Add <Sparkles size={14} /></>
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
 
                         {/* Social Motivation */}
                         <motion.div
@@ -425,10 +372,9 @@ export default function SuccessPage() {
                             <Link href="/help/shipping" className="block text-gray-500 hover:text-black">Shipping</Link>
                             <Link href="/help/privacy" className="block text-gray-500 hover:text-black">Privacy policy</Link>
                             <Link href="/help/terms" className="block text-gray-500 hover:text-black">Terms of service</Link>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                </motion.div>
+            </motion.div>
+            </div>
         </div>
     );
 }

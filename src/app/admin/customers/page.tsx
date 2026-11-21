@@ -78,7 +78,7 @@ export default async function CustomersPage({
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 font-medium text-gray-900">
-                                    ${((customer.totalSpend || 0) / 100).toFixed(2)}
+                                    ₹{((customer.totalSpend || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </td>
                                 <td className="px-6 py-4 text-gray-500 text-xs">
                                     {customer.lastSeenAt ? format(customer.lastSeenAt, 'MMM d, yyyy h:mm a') : '-'}

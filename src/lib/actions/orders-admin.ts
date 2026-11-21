@@ -67,12 +67,25 @@ export interface AdminOrderDetail {
     customerName: string | null;
     customerEmail: string | null;
     customerPhone: string | null;
+    trackingCarrier: string | null;
+    trackingNumber: string | null;
+    trackingUrl: string | null;
+    shippedAt: Date | null;
     items: AdminOrderItem[];
 }
 
 function customerName(firstName: string | null, lastName: string | null): string | null {
     const name = [firstName, lastName].filter(Boolean).join(' ').trim();
     return name || null;
+}
+
+function safeTrackingUrl(url: string | null): string | null {
+    if (!url) return null;
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.toString();
+    } catch {}
+    return null;
 }
 
 function buildWhere(filters: AdminOrderFilters) {
@@ -163,7 +176,7 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
         stats.counts[status] = (stats.counts[status] ?? 0) + orderCount;
 
         if (isRevenueStatus(row.status)) {
-            const currency = (row.currency || 'USD').toUpperCase();
+            const currency = (row.currency || 'INR').toUpperCase();
             stats.revenue[currency] = (stats.revenue[currency] ?? 0) + (Number(row.amount) || 0);
         }
     }
@@ -175,7 +188,7 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
             id: row.id,
             createdAt: row.createdAt,
             status: row.status ?? 'pending',
-            currency: row.currency ?? 'USD',
+            currency: row.currency ?? 'INR',
             totalAmount: row.totalAmount,
             customerId: row.customerId,
             customerName: customerName(row.firstName, row.lastName),
@@ -212,6 +225,10 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
             lastName: customers.lastName,
             email: customers.email,
             phone: customers.phone,
+            trackingCarrier: orders.trackingCarrier,
+            trackingNumber: orders.trackingNumber,
+            trackingUrl: orders.trackingUrl,
+            shippedAt: orders.shippedAt,
         })
         .from(orders)
         .leftJoin(customers, eq(orders.customerId, customers.id))
@@ -231,7 +248,7 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
         status: order.status ?? 'pending',
-        currency: order.currency ?? 'USD',
+        currency: order.currency ?? 'INR',
         totalAmount: order.totalAmount,
         paymentId: order.paymentId,
         razorpayOrderId: order.razorpayOrderId,
@@ -240,6 +257,10 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
         customerName: customerName(order.firstName, order.lastName),
         customerEmail: order.email,
         customerPhone: order.phone,
+        trackingCarrier: order.trackingCarrier,
+        trackingNumber: order.trackingNumber,
+        trackingUrl: safeTrackingUrl(order.trackingUrl),
+        shippedAt: order.shippedAt,
         items: items.map((item) => ({
             id: item.id,
             productId: item.productId,
@@ -254,6 +275,10 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
 export interface UpdateAdminOrderInput {
     status?: string;
     paymentId?: string | null;
+    trackingCarrier?: string | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
+    shippedAt?: string | null;
 }
 
 /**
@@ -289,6 +314,32 @@ export async function updateAdminOrder(orderId: string, input: UpdateAdminOrderI
         if (input.paymentId !== undefined) {
             const paymentId = String(input.paymentId ?? '').trim().slice(0, 120);
             patch.paymentId = paymentId || null;
+        }
+
+        if (input.trackingCarrier !== undefined) {
+            patch.trackingCarrier = String(input.trackingCarrier ?? '').trim().slice(0, 120) || null;
+        }
+        if (input.trackingNumber !== undefined) {
+            patch.trackingNumber = String(input.trackingNumber ?? '').trim().slice(0, 120) || null;
+        }
+        if (input.trackingUrl !== undefined) {
+            const raw = String(input.trackingUrl ?? '').trim().slice(0, 500);
+            patch.trackingUrl = raw ? safeTrackingUrl(raw) : null;
+            if (raw && !patch.trackingUrl) {
+                throw new Error('Tracking URL must be a valid http(s) URL.');
+            }
+        }
+        if (input.shippedAt !== undefined) {
+            const raw = String(input.shippedAt ?? '').trim();
+            if (!raw) {
+                patch.shippedAt = null;
+            } else {
+                const date = new Date(raw);
+                if (Number.isNaN(date.getTime())) {
+                    throw new Error('Invalid shipped date.');
+                }
+                patch.shippedAt = date;
+            }
         }
 
         const updatedRows = await tx

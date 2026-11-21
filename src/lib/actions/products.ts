@@ -3,7 +3,6 @@
 import { db } from '@/db';
 import { products } from '@/db/schema';
 import { eq, and, ilike, sql, desc, asc, inArray } from 'drizzle-orm';
-import { headers } from 'next/headers';
 import { unstable_cache } from 'next/cache';
 import type { Product } from '@/lib/types';
 
@@ -20,11 +19,9 @@ export interface GetProductsOptions {
 }
 
 export const getProducts = async (options: GetProductsOptions = {}) => {
-    // Get region outside the cached function if not provided
-    if (!options.region) {
-        const headerList = await headers();
-        options.region = (headerList.get('x-region') as 'IN' | 'GLOBAL') || 'GLOBAL';
-    }
+    // Low Religion storefront prices are displayed in INR.
+    // Keep both stored price columns intact; select INR for display consistency.
+    options.region = 'IN';
 
     if (process.env.NODE_ENV === 'development') {
         // Bypass next.js unstable_cache completely during development
@@ -79,9 +76,9 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
 
     let orderBy = [desc(products.createdAt)];
     if (sort === 'price_asc') {
-        orderBy = [asc(isIndia ? products.priceINR : products.priceUSD)];
+        orderBy = [asc(products.priceINR)];
     } else if (sort === 'price_desc') {
-        orderBy = [desc(isIndia ? products.priceINR : products.priceUSD)];
+        orderBy = [desc(products.priceINR)];
     }
 
     const data = await db.select().from(products)
@@ -114,20 +111,18 @@ const fetchRawProducts = async (options: GetProductsOptions) => {
             category: p.category ?? '',
             isNew: p.isNew ?? false,
             isSale: p.isSale ?? false,
-            // Adaptive price based on region
-            price: isIndia ? p.priceINR / 100 : p.priceUSD / 100,
-            compareAtPrice: isIndia
-                ? (p.compareAtPriceINR ? p.compareAtPriceINR / 100 : undefined)
-                : (p.compareAtPriceUSD ? p.compareAtPriceUSD / 100 : undefined),
-            currency: isIndia ? 'INR' : 'USD',
-            symbol: isIndia ? '₹' : '$'
+            // Storefront display currency is INR.
+            price: p.priceINR / 100,
+            compareAtPrice: p.compareAtPriceINR ? p.compareAtPriceINR / 100 : undefined,
+            currency: 'INR',
+            symbol: '₹'
         })),
         metadata: {
             total,
             page,
             limit,
             totalPages: Math.ceil(total / limit),
-            region
+            region: 'IN'
         }
     };
 };

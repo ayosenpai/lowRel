@@ -183,7 +183,7 @@ export default function WishlistPage() {
                                             <p className={`text-xs font-bold uppercase tracking-widest ${comingSoon ? 'text-gray-400' : 'text-gray-500'}`}>
                                                 {comingSoon
                                                     ? COMING_SOON_PRICE_LABEL
-                                                    : <>{product.symbol || '$'} {product.price?.toFixed(2)}</>}
+                                                    : <>{product.symbol || '₹'} {product.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>}
                                             </p>
                                         </div>
                                     </Link>

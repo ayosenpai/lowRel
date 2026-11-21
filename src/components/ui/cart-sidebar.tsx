@@ -190,7 +190,7 @@ export default function CartSidebar() {
                             {item.name}
                           </h4>
                           <p className="font-black text-xs uppercase tracking-widest whitespace-nowrap">
-                            {item.symbol || '$'} {item.price?.toFixed(2)}
+                            {item.symbol || '₹'} {(item.price ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
                         </div>
 
@@ -258,7 +258,7 @@ export default function CartSidebar() {
                         </div>
                         <h4 className="text-[8px] font-black uppercase tracking-widest truncate leading-tight mb-0.5">{product.name}</h4>
                         <p className="text-[8px] text-gray-500 font-bold tracking-widest">
-                          {product.symbol || '$'} {product.price?.toFixed(2)}
+                          {product.symbol || '₹'} {(product.price ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                         <button
                           onClick={() => handleQuickAdd(product)}
@@ -279,7 +279,7 @@ export default function CartSidebar() {
               <div className="border-t-[1.5px] border-black p-6 bg-white safe-bottom">
                 <div className="flex justify-between items-center mb-5 px-1">
                   <span className="lowrel-header text-sm uppercase tracking-widest">Subtotal</span>
-                  <span className="lowrel-header text-sm uppercase tracking-widest">{state.items[0]?.symbol || '$'} {state.total.toFixed(2)}</span>
+                  <span className="lowrel-header text-sm uppercase tracking-widest">{state.items[0]?.symbol || '₹'} {state.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <Link
                   href="/checkout"

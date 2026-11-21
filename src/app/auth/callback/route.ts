@@ -3,6 +3,7 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ensureProfile } from '@/lib/profile'
+import { finalizeClaimForCurrentUser } from '@/lib/actions/account'
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
@@ -28,7 +29,10 @@ export async function GET(request: NextRequest) {
 
         if (!error) {
             const { data: { user } } = await supabase.auth.getUser()
-            if (user) await ensureProfile(user)
+            if (user) {
+                await ensureProfile(user)
+                await finalizeClaimForCurrentUser().catch(() => {})
+            }
             return NextResponse.redirect(redirectTo)
         }
     }
@@ -44,7 +48,10 @@ export async function GET(request: NextRequest) {
 
         if (!error) {
             const { data: { user } } = await supabase.auth.getUser()
-            if (user) await ensureProfile(user)
+            if (user) {
+                await ensureProfile(user)
+                await finalizeClaimForCurrentUser().catch(() => {})
+            }
             return NextResponse.redirect(redirectTo)
         }
     }

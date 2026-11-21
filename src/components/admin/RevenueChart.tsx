@@ -69,7 +69,7 @@ export default function RevenueChart({
             shared: true,
             intersect: false,
             y: [
-                { formatter: (val: number) => `${symbol}${val.toFixed(2)}` },
+                { formatter: (val: number) => `${symbol}${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
                 { formatter: (val: number) => `${val} orders` },
             ],
         },

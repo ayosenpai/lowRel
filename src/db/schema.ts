@@ -1,18 +1,20 @@
 // ... existing imports
-import { pgTable, text, integer, boolean, timestamp, uuid, index, jsonb } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { pgTable, text, integer, boolean, timestamp, uuid, index, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
 
 export const profiles = pgTable('profiles', {
     id: uuid('id').primaryKey().notNull(), // configures compatibility with Supabase Auth
     email: text('email'),
     firstName: text('first_name'),
     lastName: text('last_name'),
+    username: text('username'),
     avatarUrl: text('avatar_url'),
     role: text('role').default('user').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => {
     return {
         emailIdx: index('email_idx').on(table.email),
+        usernameLowerIdx: uniqueIndex('profiles_username_lower_idx').on(sql`lower(${table.username})`).where(sql`"username" IS NOT NULL`),
     };
 });
 
@@ -65,19 +67,29 @@ export const customers = pgTable('customers', {
 export const orders = pgTable('orders', {
     id: uuid('id').primaryKey().defaultRandom(),
     customerId: uuid('customer_id').references(() => customers.id),
+    profileId: uuid('profile_id').references(() => profiles.id, { onDelete: 'set null', onUpdate: 'no action' }),
     totalAmount: integer('total_amount').notNull(), // smallest unit (paise/cents)
-    currency: text('currency').default('USD'),
+    currency: text('currency').default('INR'),
     status: text('status').default('pending'), // pending, paid, failed, shipped
     paymentId: text('payment_id'), // Razorpay Payment ID
     orderId: text('razorpay_order_id'), // Razorpay Order ID
     discountCode: text('discount_code'),
     shippingAddress: jsonb('shipping_address'),
+    claimTokenHash: text('claim_token_hash'),
+    claimTokenExpiresAt: timestamp('claim_token_expires_at'),
+    claimedAt: timestamp('claimed_at'),
+    trackingCarrier: text('tracking_carrier'),
+    trackingNumber: text('tracking_number'),
+    trackingUrl: text('tracking_url'),
+    shippedAt: timestamp('shipped_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => {
     return {
         orderCustomerIdx: index('order_customer_idx').on(table.customerId),
+        orderProfileIdx: index('order_profile_idx').on(table.profileId),
         razorpayOrderIdx: index('razorpay_order_idx').on(table.orderId),
+        orderClaimTokenHashIdx: uniqueIndex('order_claim_token_hash_idx').on(table.claimTokenHash).where(sql`"claim_token_hash" IS NOT NULL`),
     };
 });
 

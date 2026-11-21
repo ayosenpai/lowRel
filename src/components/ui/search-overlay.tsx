@@ -161,7 +161,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                                                 <p className={`text-[10px] ${comingSoon ? 'text-gray-400 uppercase tracking-wide' : 'text-gray-500'}`}>
                                                                     {comingSoon
                                                                         ? COMING_SOON_PRICE_LABEL
-                                                                        : <>{product.symbol || 'Rs.'} {product.price?.toFixed(2)}</>}
+                                                                        : <>{product.symbol || '₹'} {product.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>}
                                                                 </p>
                                                             </div>
                                                         </Link>

@@ -251,11 +251,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                             ) : (
                                 <div className="flex items-center justify-center gap-4">
                                     <span className={`text-xl font-bold tracking-[.009em] ${product.isSale ? 'text-[#ff69b4]' : ''}`}>
-                                        {product.symbol} {product.price.toFixed(2)}
+                                        {product.symbol} {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
                                     {product.compareAtPrice && (
                                         <span className="text-gray-400 line-through text-lg">
-                                            {product.symbol} {product.compareAtPrice.toFixed(2)}
+                                            {product.symbol} {product.compareAtPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     )}
                                 </div>

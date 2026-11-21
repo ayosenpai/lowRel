@@ -96,7 +96,7 @@ function ProductCard({ product, index }: { product: Product, index: number }) {
         <div className="absolute bottom-2 left-2 bg-white/80 px-2 py-1 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
           {comingSoon
             ? COMING_SOON_PRICE_LABEL
-            : <>{product.symbol || '₹'} {product.price?.toFixed(2)}</>}
+            : <>{product.symbol || '₹'} {product.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>}
         </div>
       </Link>
     </div>

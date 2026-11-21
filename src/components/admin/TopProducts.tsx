@@ -33,7 +33,7 @@ export default function TopProducts({
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-[#0F172A] truncate">{p.name}</span>
                         </div>
-                        <span className="lr-display text-[11px] font-black text-[#0F172A] shrink-0">{symbol}{p.revenue.toFixed(2)}</span>
+                        <span className="lr-display text-[11px] font-black text-[#0F172A] shrink-0">{symbol}{p.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="h-1.5 bg-[#F1EDE8] rounded-full overflow-hidden">
                         <div

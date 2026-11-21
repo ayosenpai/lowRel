@@ -110,7 +110,7 @@ export default function DashboardClient({ initialData }: { initialData: AdminDas
     const cards = [
         {
             label: 'Revenue',
-            value: `${data.currencySymbol}${data.period.revenue.toFixed(2)}`,
+            value: `${data.currencySymbol}${data.period.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             delta: pctChange(data.period.revenue, data.previous.revenue),
             icon: DollarSign,
             tone: 'indigo' as const,
@@ -126,7 +126,7 @@ export default function DashboardClient({ initialData }: { initialData: AdminDas
         },
         {
             label: 'Avg Order Value',
-            value: `${data.currencySymbol}${data.period.aov.toFixed(2)}`,
+            value: `${data.currencySymbol}${data.period.aov.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             delta: pctChange(data.period.aov, data.previous.aov),
             icon: Receipt,
             tone: 'amber' as const,

@@ -4,14 +4,33 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { User } from '@supabase/supabase-js'
 import { logout } from '@/app/login/actions'
-import { Mail, User as UserIcon, LogOut, Package, Heart, MapPin } from 'lucide-react'
+import { Mail, User as UserIcon, LogOut, Package, Heart, MapPin, ExternalLink } from 'lucide-react'
 import ChangePassword from './ChangePassword'
+import type { AccountOrder } from '@/lib/account-orders'
 
 interface AccountClientProps {
     user: User
+    orders: AccountOrder[]
 }
 
-export default function AccountClient({ user }: AccountClientProps) {
+function formatMoney(amount: number, currency: string) {
+    const value = amount / 100
+    if ((currency || '').toUpperCase() === 'INR') {
+        return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    }
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function safeTrackingHref(url: string | null) {
+    if (!url) return null
+    try {
+        const parsed = new URL(url)
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.toString()
+    } catch {}
+    return null
+}
+
+export default function AccountClient({ user, orders }: AccountClientProps) {
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist'>('profile')
 
     const userMetadata = user.user_metadata || {}
@@ -131,19 +150,82 @@ export default function AccountClient({ user }: AccountClientProps) {
 
                 {activeTab === 'orders' && (
                     <div className="max-w-4xl mx-auto">
-                        <div className="text-center py-16">
-                            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                            <h3 className="lowrel-header text-lg mb-2 uppercase">No Orders Yet</h3>
-                            <p className="text-sm text-gray-500 mb-6">
-                                Start shopping to see your orders here
-                            </p>
-                            <Link
-                                href="/collections/all"
-                                className="inline-block bg-black text-white px-8 py-3 text-xs uppercase font-black tracking-[0.15em] hover:bg-gray-800 transition-colors"
-                            >
-                                Start Shopping
-                            </Link>
-                        </div>
+                        {orders.length === 0 ? (
+                            <div className="text-center py-16">
+                                <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                <h3 className="lowrel-header text-lg mb-2 uppercase">No Orders Yet</h3>
+                                <p className="text-sm text-gray-500 mb-6">
+                                    When you claim a purchase, your orders will appear here.
+                                </p>
+                                <Link
+                                    href="/collections/all"
+                                    className="inline-block bg-black text-white px-8 py-3 text-xs uppercase font-black tracking-[0.15em] hover:bg-gray-800 transition-colors"
+                                >
+                                    Start Shopping
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {orders.map((order) => {
+                                    const trackingHref = safeTrackingHref(order.trackingUrl)
+                                    return (
+                                        <div key={order.id} className="border border-gray-200 p-5 md:p-6">
+                                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black tracking-[0.15em] text-gray-400 mb-1">Order #{order.reference}</p>
+                                                    <p className="text-sm text-gray-600">
+                                                        {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                    </p>
+                                                </div>
+                                                <div className="text-left md:text-right">
+                                                    <p className="text-sm font-bold text-gray-900">{formatMoney(order.totalAmount, order.currency)}</p>
+                                                    <p className="text-xs text-gray-500">{order.items.reduce((s, i) => s + i.quantity, 0)} item{order.items.reduce((s, i) => s + i.quantity, 0) === 1 ? '' : 's'}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black tracking-[0.15em] text-gray-400 mb-1">Payment</p>
+                                                    <p className="font-medium text-gray-900">{order.paymentStatus}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black tracking-[0.15em] text-gray-400 mb-1">Fulfilment</p>
+                                                    <p className="font-medium text-gray-900">{order.fulfilmentStatus}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black tracking-[0.15em] text-gray-400 mb-1">Carrier</p>
+                                                    <p className="font-medium text-gray-900">{order.trackingCarrier || '—'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black tracking-[0.15em] text-gray-400 mb-1">Tracking</p>
+                                                    {trackingHref ? (
+                                                        <a href={trackingHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-black underline underline-offset-2">
+                                                            {order.trackingNumber || 'Track order'} <ExternalLink className="w-3 h-3" />
+                                                        </a>
+                                                    ) : (
+                                                        <p className="font-medium text-gray-900">{order.trackingNumber || '—'}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t border-gray-100 pt-4 space-y-2">
+                                                {order.items.map((item) => (
+                                                    <div key={item.id} className="flex items-center justify-between gap-4 text-sm">
+                                                        <div className="min-w-0">
+                                                            <p className="text-gray-900 truncate">{item.productName}</p>
+                                                            <p className="text-xs text-gray-500">
+                                                                {item.variantName ? `${item.variantName} · ` : ''}Qty {item.quantity}
+                                                            </p>
+                                                        </div>
+                                                        <p className="text-gray-700 shrink-0">{formatMoney(item.price * item.quantity, order.currency)}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
 
