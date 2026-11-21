@@ -11,12 +11,7 @@ import { trackEvent } from '@/lib/actions/analytics';
 import { useCheckout } from '@/lib/checkout-context';
 import { useRouter } from 'next/navigation';
 
-declare global {
-  interface Window {
-    google?: any;
-    __initGooglePlacesCheckout?: () => void;
-  }
-}
+// OSM/Photon address search is used for checkout address autocomplete (no API key required).
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
@@ -38,14 +33,32 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
-  const addressInputRef = useRef<HTMLInputElement | null>(null);
-  const autocompleteRef = useRef<any>(null);
+  const [addressQuery, setAddressQuery] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ label: string; address: string; city: string; state: string; postalCode: string }>>([]);
+  const [isAddressSearching, setIsAddressSearching] = useState(false);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const addressBoxRef = useRef<HTMLDivElement | null>(null);
   const lastPincodeLookupRef = useRef<string>('');
+  const skipNextAddressSearchRef = useRef(false);
 
   useEffect(() => {
     // Simulate loading
     const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    setAddressQuery(checkoutData.address || '');
+  }, [checkoutData.address]);
+
+  useEffect(() => {
+    const onPointerDown = (e: MouseEvent) => {
+      if (addressBoxRef.current && !addressBoxRef.current.contains(e.target as Node)) {
+        setShowAddressSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
   }, []);
 
   // Auto-fill city/state from Indian PIN code (no API key required)
@@ -92,96 +105,76 @@ export default function CheckoutPage() {
     };
   }, [checkoutData.postalCode]);
 
-  // Optional: Google Places address autocomplete (requires NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
+  // OSM/Photon address search (no API key). Debounced to be respectful of public usage.
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || isLoading) return;
-
-    const initAutocomplete = () => {
-      if (!window.google?.maps?.places || !addressInputRef.current || autocompleteRef.current) return;
-
-      const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-        componentRestrictions: { country: 'in' },
-        fields: ['address_components', 'formatted_address', 'geometry', 'name'],
-        types: ['address'],
-      });
-
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        const components: any[] = place?.address_components || [];
-        const get = (type: string) =>
-          components.find((c) => c.types?.includes(type))?.long_name || '';
-        const getShort = (type: string) =>
-          components.find((c) => c.types?.includes(type))?.short_name || '';
-
-        const streetNumber = get('street_number');
-        const route = get('route');
-        const sublocality =
-          get('sublocality_level_1') || get('sublocality') || get('neighborhood') || '';
-        const premise = get('premise') || get('subpremise') || '';
-
-        const line1 = [streetNumber, route].filter(Boolean).join(' ').trim();
-        const addressLine = [premise, line1, sublocality].filter(Boolean).join(', ') || place?.formatted_address || place?.name || '';
-
-        const city =
-          get('locality') ||
-          get('postal_town') ||
-          get('administrative_area_level_2') ||
-          get('sublocality_level_1') ||
-          '';
-        const state = get('administrative_area_level_1');
-        const postalCode = get('postal_code');
-        const country = get('country') || 'India';
-
-        const updates: Record<string, string> = {};
-        if (addressLine) updates.address = addressLine;
-        if (city) updates.city = city;
-        if (state) updates.state = state;
-        if (postalCode) {
-          updates.postalCode = postalCode;
-          lastPincodeLookupRef.current = postalCode.replace(/\D/g, '');
-        }
-        if (country) updates.country = country;
-
-        if (Object.keys(updates).length) {
-          updateCheckoutData(updates);
-          if (postalCode) setPincodeStatus('success');
-        }
-      });
-
-      autocompleteRef.current = autocomplete;
-    };
-
-    if (window.google?.maps?.places) {
-      initAutocomplete();
+    const q = addressQuery.trim();
+    if (skipNextAddressSearchRef.current) {
+      skipNextAddressSearchRef.current = false;
+      setIsAddressSearching(false);
+      return;
+    }
+    if (q.length < 3) {
+      setAddressSuggestions([]);
+      setIsAddressSearching(false);
       return;
     }
 
-    const existing = document.querySelector('script[data-google-places="true"]') as HTMLScriptElement | null;
-    if (existing) {
-      existing.addEventListener('load', initAutocomplete);
-      return () => existing.removeEventListener('load', initAutocomplete);
-    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        setIsAddressSearching(true);
+        const params = new URLSearchParams({
+          q: `${q}${/india/i.test(q) ? '' : ', India'}`,
+          limit: '6',
+          lang: 'en',
+        });
+        const res = await fetch(`https://photon.komoot.io/api/?${params.toString()}`, {
+          signal: controller.signal,
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error(`Photon ${res.status}`);
+        const data = await res.json();
+        const features = Array.isArray(data?.features) ? data.features : [];
 
-    window.__initGooglePlacesCheckout = initAutocomplete;
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&loading=async&callback=__initGooglePlacesCheckout`;
-    script.async = true;
-    script.defer = true;
-    script.dataset.googlePlaces = 'true';
-    script.onerror = () => {
-      // Fail silently; manual entry and PIN autofill still work
-      console.warn('Google Places script failed to load');
-    };
-    document.head.appendChild(script);
+        const suggestions = features
+          .map((f: any) => {
+            const p = f?.properties || {};
+            const country = p.country || '';
+            const countrycode = String(p.countrycode || '').toUpperCase();
+            if (countrycode && countrycode !== 'IN' && !/india/i.test(country)) return null;
+
+            const housenumber = p.housenumber || '';
+            const street = p.street || p.name || '';
+            const line1 = [housenumber, street].filter(Boolean).join(' ').trim();
+            const locality = p.locality || p.district || p.suburb || p.county || '';
+            const city = p.city || p.town || p.village || p.municipality || p.district || '';
+            const state = p.state || '';
+            const postalCode = String(p.postcode || '').replace(/\D/g, '').slice(0, 6);
+            const address = [line1, locality].filter(Boolean).join(', ') || p.name || [city, state].filter(Boolean).join(', ');
+            const labelParts = [p.name, line1 !== p.name ? line1 : '', locality, city, state, postalCode].filter(Boolean);
+            const label = labelParts.join(', ').replace(/,\s*,/g, ', ');
+
+            if (!address && !city && !state && !postalCode) return null;
+            return { label: label || address, address, city, state, postalCode };
+          })
+          .filter(Boolean) as Array<{ label: string; address: string; city: string; state: string; postalCode: string }>;
+
+        const deduped = suggestions.filter((s, i, arr) => arr.findIndex((x) => x.label === s.label) === i).slice(0, 5);
+        setAddressSuggestions(deduped);
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          setAddressSuggestions([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsAddressSearching(false);
+      }
+    }, 350);
 
     return () => {
-      // keep script cached; just detach callback ref
-      if (window.__initGooglePlacesCheckout === initAutocomplete) {
-        delete window.__initGooglePlacesCheckout;
-      }
+      controller.abort();
+      clearTimeout(timer);
     };
-  }, [isLoading]);
+  }, [addressQuery]);
 
   const handleApplyCoupon = async () => {
     setCouponError('');
@@ -508,21 +501,61 @@ export default function CheckoutPage() {
                   className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
                 />
                 
-                <div className="space-y-1">
+                <div className="space-y-1 relative" ref={addressBoxRef}>
                   <input
-                    ref={addressInputRef}
                     required
                     type="text"
                     name="address"
                     value={checkoutData.address}
-                    onChange={handleInputChange}
-                    placeholder={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? 'Search address' : 'Address'}
-                    autoComplete="street-address"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setAddressQuery(value);
+                      setShowAddressSuggestions(true);
+                      updateCheckoutData({ address: value });
+                    }}
+                    onFocus={() => {
+                      if (addressSuggestions.length > 0) setShowAddressSuggestions(true);
+                    }}
+                    placeholder="Search address or enter manually"
+                    autoComplete="off"
                     className="w-full h-[52px] border border-[#dddddd] rounded-none bg-white px-4 text-sm outline-none focus:border-black transition-all"
                   />
-                  {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
-                    <p className="text-[11px] text-gray-500 px-1">Start typing to search and auto-fill your address.</p>
-                  ) : null}
+                  <p className="text-[11px] text-gray-500 px-1">
+                    {isAddressSearching ? 'Searching addresses…' : 'Start typing to search and auto-fill your address (powered by OpenStreetMap).'}
+                  </p>
+
+                  {showAddressSuggestions && addressSuggestions.length > 0 && (
+                    <div className="absolute z-20 mt-1 w-full border border-[#dddddd] bg-white shadow-lg max-h-64 overflow-auto">
+                      {addressSuggestions.map((s, idx) => (
+                        <button
+                          key={`${s.label}-${idx}`}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            const updates: Record<string, string> = { address: s.address || s.label };
+                            if (s.city) updates.city = s.city;
+                            if (s.state) updates.state = s.state;
+                            if (s.postalCode) {
+                              updates.postalCode = s.postalCode;
+                              lastPincodeLookupRef.current = s.postalCode;
+                              setPincodeStatus('success');
+                            }
+                            skipNextAddressSearchRef.current = true;
+                            updateCheckoutData(updates);
+                            setAddressQuery(s.address || s.label);
+                            setShowAddressSuggestions(false);
+                            setAddressSuggestions([]);
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                        >
+                          <span className="block text-gray-900 leading-snug">{s.label}</span>
+                        </button>
+                      ))}
+                      <div className="px-4 py-2 text-[10px] text-gray-400 border-t border-gray-100 bg-gray-50">
+                        Address suggestions © OpenStreetMap contributors
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <input
