@@ -114,7 +114,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
 
   const navLinks = [
     { name: 'Latest Arrivals', href: '/collections/new-in' },
-    { name: 'Shop', href: '/collections/all' },
+    { name: 'Shop All', href: '/collections/all' },
     { name: 'Winter Sale', href: '/collections/sale', highlight: true }
   ];
 

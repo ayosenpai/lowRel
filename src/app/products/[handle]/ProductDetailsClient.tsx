@@ -32,6 +32,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isZoomed, setIsZoomed] = useState(false);
     const comingSoon = isComingSoon(product);
+    const isBracelet = /^(br-\d+|b4-04)$/i.test(product?.handle || '');
+    const braceletSizeNum = (product?.handle || '').toLowerCase() === 'b4-04'
+        ? '04'
+        : ((product?.handle || '').match(/br-(\d+)/i)?.[1] ?? '');
+    const braceletSizeGuide = isBracelet && braceletSizeNum ? `/products/size/BR MEASURE-${braceletSizeNum}.png` : null;
 
     const openLightbox = (index: number) => {
         if (comingSoon) return;
@@ -110,13 +115,14 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     const handleAddToBag = () => {
         if (comingSoon) return;
 
-        if (!selectedSize) {
+        const size = isBracelet ? 'One Size' : selectedSize;
+        if (!size) {
             alert('Please select a size');
             return;
         }
 
         setIsAdding(true);
-        dispatch({ type: 'ADD_TO_CART', payload: { product, size: selectedSize } });
+        dispatch({ type: 'ADD_TO_CART', payload: { product, size } });
 
         // Track event
         trackEvent({
@@ -126,7 +132,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 name: product.name,
                 price: product.price,
                 currency: product.currency,
-                size: selectedSize
+                size
             }
         });
 
@@ -278,25 +284,40 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                         ) : (
                             <>
                                 <div className="border-t border-gray-200 pt-3">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <span className="text-xs font-bold uppercase tracking-widest">Select Size</span>
-                                        <button className="text-[10px] uppercase tracking-widest underline decoration-gray-300 hover:text-black transition-colors">Size Guide</button>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {['XS', 'S', 'M', 'L'].map((size) => (
-                                            <button
-                                                key={size}
-                                                onClick={() => setSelectedSize(size)}
-                                                className={`h-12 border transition-all duration-300 flex items-center justify-center text-sm font-medium hover:scale-105 active:scale-95 ${selectedSize === size
-                                                    ? 'border-black bg-black text-[#d8a4bc] shadow-md'
-                                                    : 'border-gray-200 hover:border-black hover:shadow-sm'
-                                                    }`}
-                                            >
-                                                {size}
-                                            </button>
-                                        ))}
-                                    </div>
-
+                                    {isBracelet && braceletSizeGuide ? (
+                                        <div className="space-y-3">
+                                            <span className="text-xs font-bold uppercase tracking-widest">Size Guide</span>
+                                            <div className="border border-gray-200 bg-white">
+                                                <img
+                                                    src={encodeURI(braceletSizeGuide)}
+                                                    alt={`${product.name} size guide`}
+                                                    className="w-full h-auto block"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex justify-between items-center mb-4">
+                                                <span className="text-xs font-bold uppercase tracking-widest">Select Size</span>
+                                                <button className="text-[10px] uppercase tracking-widest underline decoration-gray-300 hover:text-black transition-colors">Size Guide</button>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {['XS', 'S', 'M', 'L'].map((size) => (
+                                                    <button
+                                                        key={size}
+                                                        onClick={() => setSelectedSize(size)}
+                                                        className={`h-12 border transition-all duration-300 flex items-center justify-center text-sm font-medium hover:scale-105 active:scale-95 ${selectedSize === size
+                                                            ? 'border-black bg-black text-[#d8a4bc] shadow-md'
+                                                            : 'border-gray-200 hover:border-black hover:shadow-sm'
+                                                            }`}
+                                                    >
+                                                        {size}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="space-y-3">

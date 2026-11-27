@@ -105,10 +105,10 @@ export const SECTION_DEFINITIONS: Record<
             columns: 2,
             poolCategory: 'Tops',
             items: [
-                { title: 'Latest arrivals', href: '/collections/new-in' },
-                { title: 'Tops/Upperwear', href: '/collections/tops' },
-                { title: 'Accessory Arrival', href: '/collections/accessories' },
-                { title: 'Shop All', href: '/collections/all' },
+                { title: '', href: '/products/br-01', image: '/products/Braclets/BR-01/br01_pose_ccw_v2.webp' },
+                { title: '', href: '/products/br-02', image: '/products/Braclets/BR-02/br02_pose_ccw.webp' },
+                { title: '', href: '/products/br-03', image: '/products/Braclets/BR-03/br03_pose_ccw.webp' },
+                { title: 'Shop All', href: '/collections/all', image: '/products/Braclets/B4-04/br04_pose_ccw.webp' },
             ],
         },
     },
@@ -217,7 +217,7 @@ function normalizeItems(value: unknown): CategoryTile[] {
             href: text(item?.href, 600),
             image: text(item?.image, 1000),
         }))
-        .filter((item) => item.title.length > 0 && item.href.length > 0)
+        .filter((item) => item.href.length > 0)
         .slice(0, 12);
 }
 

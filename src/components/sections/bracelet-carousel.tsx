@@ -62,7 +62,7 @@ export default function BraceletCarousel({
           >
             <div className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-white">
               <SupabaseImage
-                src={product.images[0]}
+                src={product.images.find((img) => !/_pose/i.test(img)) || product.images[0]}
                 alt={product.name}
                 fill
                 className={`object-cover ${isComingSoon(product) ? COMING_SOON_IMAGE_CLASS : ''}`}
