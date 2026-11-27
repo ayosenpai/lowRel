@@ -202,6 +202,7 @@ export const coupons = pgTable('coupons', {
     id: uuid('id').primaryKey().defaultRandom(),
     code: text('code').notNull().unique(),
     description: text('description'),
+    promoText: text('promo_text'),
     type: text('type').notNull().default('percent'), // percent
     value: integer('value').notNull(), // percent value, e.g. 15
     isActive: boolean('is_active').notNull().default(true),

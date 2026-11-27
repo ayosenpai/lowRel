@@ -21,7 +21,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showEmptyCartPopup, setShowEmptyCartPopup] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [promo, setPromo] = useState<{ code: string; value: number } | null>(null);
+  const [promo, setPromo] = useState<{ code: string; value: number; promoText?: string | null } | null>(null);
   const { state, dispatch } = useCart();
 
   const [isVisible, setIsVisible] = useState(true);
@@ -50,7 +50,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
     getUser();
 
     getActivePromoCoupon().then((coupon) => {
-      if (coupon) setPromo({ code: coupon.code, value: coupon.value });
+      if (coupon) setPromo({ code: coupon.code, value: coupon.value, promoText: coupon.promoText });
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
@@ -131,7 +131,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
           className={`w-full bg-[#d8a4bc] h-[30px] flex items-center justify-center absolute top-0 z-50 ${isTransparent ? '' : 'border-b border-black'}`}
         >
           <span className="text-[10px] text-black font-bold tracking-[0.05em] uppercase">
-            {promo ? `USE "${promo.code}" FOR ${promo.value}% OFF` : 'LOW RELIGION'}
+            {promo ? (promo.promoText?.trim() || `USE "${promo.code}" FOR ${promo.value}% OFF`) : 'LOW RELIGION'}
           </span>
         </div>
 

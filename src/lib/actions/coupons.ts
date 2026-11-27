@@ -120,6 +120,7 @@ export async function getCouponById(id: string): Promise<CouponRecord | null> {
 export interface CouponInput {
     code: string;
     description?: string;
+    promoText?: string | null;
     value: number; // percent
     isActive?: boolean;
     isPublic?: boolean;
@@ -160,6 +161,7 @@ export async function upsertCoupon(
         input.maxUses == null || input.maxUses === ('' as any)
             ? null
             : Math.max(1, Math.round(Number(input.maxUses)));
+    const promoText = input.promoText?.trim() || null;
 
     try {
         if (id) {
@@ -168,6 +170,7 @@ export async function upsertCoupon(
                 .set({
                     code,
                     description: input.description?.trim() || null,
+                    promoText,
                     type: 'percent',
                     value,
                     isActive: input.isActive ?? true,
@@ -182,6 +185,7 @@ export async function upsertCoupon(
             await db.insert(coupons).values({
                 code,
                 description: input.description?.trim() || null,
+                promoText,
                 type: 'percent',
                 value,
                 isActive: input.isActive ?? true,

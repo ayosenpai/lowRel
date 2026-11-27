@@ -27,7 +27,7 @@ export default function SuccessPage() {
     const { dispatch } = useCart();
     const [orderNumber, setOrderNumber] = useState<string | number>(() => Math.floor(100000 + Math.random() * 900000));
     const [order, setOrder] = useState<OrderSnapshot | null>(null);
-    const [promo, setPromo] = useState<{ code: string; value: number } | null>(null);
+    const [promo, setPromo] = useState<{ code: string; value: number; promoText?: string | null } | null>(null);
     const [claimStatus, setClaimStatus] = useState<any>(null);
     const [claimUsername, setClaimUsername] = useState('');
     const [claimPassword, setClaimPassword] = useState('');
@@ -52,7 +52,7 @@ export default function SuccessPage() {
         let cancelled = false;
         getActivePromoCoupon()
             .then((coupon) => {
-                if (!cancelled && coupon) setPromo({ code: coupon.code, value: coupon.value });
+                if (!cancelled && coupon) setPromo({ code: coupon.code, value: coupon.value, promoText: coupon.promoText });
             })
             .catch(() => {});
 
@@ -212,7 +212,7 @@ export default function SuccessPage() {
                                         </div>
                                         <div className="text-left">
                                             <p className="text-xs md:text-sm font-bold text-gray-900">Next drop gift</p>
-                                            <p className="text-[10px] md:text-xs text-gray-500">{promo.value}% OFF your next piece.</p>
+                                            <p className="text-[10px] md:text-xs text-gray-500">{promo.promoText?.trim() || `${promo.value}% OFF your next piece.`}</p>
                                         </div>
                                     </div>
                                     <div className="bg-gray-50 px-4 py-2 rounded-none border-2 border-dashed border-gray-200">

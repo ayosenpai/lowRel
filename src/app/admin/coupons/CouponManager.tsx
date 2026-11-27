@@ -13,6 +13,7 @@ export type SerializableCoupon = {
     id: string;
     code: string;
     description: string | null;
+    promoText: string | null;
     type: string;
     value: number;
     isActive: boolean;
@@ -29,6 +30,7 @@ type FormState = {
     id?: string;
     code: string;
     description: string;
+    promoText: string;
     value: string;
     isActive: boolean;
     isPublic: boolean;
@@ -40,6 +42,7 @@ type FormState = {
 const emptyForm: FormState = {
     code: '',
     description: '',
+    promoText: '',
     value: '10',
     isActive: true,
     isPublic: true,
@@ -104,6 +107,7 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
             id: coupon.id,
             code: coupon.code,
             description: coupon.description || '',
+            promoText: coupon.promoText || '',
             value: String(coupon.value ?? 10),
             isActive: coupon.isActive,
             isPublic: coupon.isPublic ?? true,
@@ -130,6 +134,7 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                 {
                     code: form.code,
                     description: form.description,
+                    promoText: form.promoText || null,
                     value: Number(form.value),
                     isActive: form.isActive,
                     isPublic: form.isPublic,
@@ -249,13 +254,24 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Description (optional)</label>
+                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Internal description (optional)</label>
                             <input
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                placeholder="Internal note or promo label"
+                                placeholder="Internal note for admins"
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[11px] font-medium outline-none focus:ring-1 focus:ring-[#0F172A]"
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Promo banner text (optional)</label>
+                            <input
+                                value={form.promoText}
+                                onChange={(e) => setForm({ ...form, promoText: e.target.value })}
+                                placeholder='E.g. USE "MATTERBABY" FOR 15% OFF — FIRST 10 USERS'
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[11px] font-medium outline-none focus:ring-1 focus:ring-[#0F172A]"
+                            />
+                            <p className="text-[10px] text-gray-400">Shown to users in homepage/promo banner. Leave blank to use the default format.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -359,6 +375,9 @@ export default function CouponManager({ initialCoupons }: { initialCoupons: Seri
                                                 <p className="text-[11px] font-black uppercase tracking-widest text-[#0F172A]">{coupon.code}</p>
                                                 {coupon.description && (
                                                     <p className="text-[10px] text-gray-400 mt-1">{coupon.description}</p>
+                                                )}
+                                                {coupon.promoText && (
+                                                    <p className="text-[10px] text-[#d8a4bc] mt-1">Banner: {coupon.promoText}</p>
                                                 )}
                                             </td>
                                             <td className="px-6 md:px-8 py-5">
